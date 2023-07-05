@@ -1,0 +1,17 @@
+{
+  "manifest_version": 1,
+  "type": "extension",
+  "name": "防撤回",
+  "slug": "anti_recall",
+  "description": "防止撤回",
+  "version": "0.1.0",
+  "author": [
+    {
+      "name": "XiaoHe321",
+      "link": "https://github.com/xh321"
+    }
+  ],
+  "injects": {
+    "main": "./main.js"
+  }
+}
