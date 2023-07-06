@@ -1,11 +1,12 @@
-# anti-recall
+# LiteLoaderQQNT - anti-recall
 
-BetterQQNT（JS版）插件，用于简易的防撤回。
-使用前需要安装[BetterQQNT](https://github.com/mo-jinran/BetterQQNT)，并在QQNt新版上使用。
+LiteLoaderQQNT插件，用于简易的防撤回。
+使用前需要安装[LiteLoaderQQNT](https://github.com/mo-jinran/LiteLoaderQQNT)，并在QQNT新版上使用。
 
 ## 使用方法
 
-clone或下载zip文件解压，将文件夹移动至`BetterQQNT数据目录/plugins/`下面，重启QQNT即可。
+clone或下载zip文件解压，保留文件夹结构（文件夹名称为`插件名`，内容为github上的内容），将文件夹移动至`LiteLoaderQQNT数据目录/plugins/`下面，重启QQNT即可。
+
 为什么在简介里说是简易的呢？因为这个防撤回原理是通过拦截撤回消息的IPC，这样消息就不会被删除。可是，若是重新进入消息列表，NTQQ似乎会重新向服务器拉取一次消息（这和旧版QQ的表现不一致），所以导致消息仍然被撤回了。
 
 所以，目前防撤回仅当你打开聊天窗口时生效，重新进入就失效了。
