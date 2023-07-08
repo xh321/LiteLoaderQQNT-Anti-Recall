@@ -1,6 +1,17 @@
-function onLoad(plugin) {}
+const { BrowserWindow, ipcMain } = require("electron");
+
+var mainWindowObj = null;
+function onLoad(plugin) {
+}
 
 function onBrowserWindowCreated(window) {
+    
+    window.webContents.on("did-stop-loading", () => {
+        if (window.webContents.getURL().indexOf("#/main/message") != -1) {
+            mainWindowObj = window;
+        }
+    });
+
     const original_send = window.webContents.send;
     //var myUid = "";
     window.webContents.send = function (channel, ...args) {
@@ -24,15 +35,28 @@ function onBrowserWindowCreated(window) {
                 //拦截撤回IPC
                 if (args1.cmdName.indexOf("onMsgInfoListUpdate") != -1) {
                     var msgList = args1.payload.msgList[0];
-                    console.log(args[1][0].payload.msgList[0]);
-                    console.log("<========================================>");
-                    console.log(msgList.elements[0]);
+                    if (
+                        msgList.elements[0].grayTipElement != null 
+                        &&
+                        msgList.elements[0].grayTipElement.revokeElement == null
+                    ) {
+                        console.log(args[1][0].payload.msgList[0]);
+                        console.log(
+                            "<========================================>"
+                        );
+                        console.log(msgList.elements[0]);
+                    }
                     if (msgList.msgType == 5 && msgList.subMsgType == 4) {
                         //不是自己撤回的，才拦截
                         if (
                             !msgList.elements[0].grayTipElement.revokeElement
                                 .isSelfOperate
                         ) {
+                            mainWindowObj.webContents.send(
+                                "LiteLoader.anti_recall.mainWindow.recallTip",
+                                msgList.msgId
+                            );
+
                             // console.log(args1.payload);
                             //args[1][0].payload = null;
                             args[1][0].payload = null;
