@@ -1,11 +1,9 @@
 const { BrowserWindow, ipcMain } = require("electron");
 
 var mainWindowObj = null;
-function onLoad(plugin) {
-}
+function onLoad(plugin) {}
 
 function onBrowserWindowCreated(window) {
-    
     window.webContents.on("did-stop-loading", () => {
         if (window.webContents.getURL().indexOf("#/main/message") != -1) {
             mainWindowObj = window;
@@ -16,6 +14,33 @@ function onBrowserWindowCreated(window) {
     //var myUid = "";
     window.webContents.send = function (channel, ...args) {
         if (args.length >= 2) {
+            //MessageList IPC 中能看到消息全量更新内容，其中包含撤回的提示，但并不包含被撤回的消息
+            // if (
+            //     args.some(
+            //         (item) =>
+            //             item &&
+            //             item.hasOwnProperty("msgList") &&
+            //             item.msgList != null &&
+            //             item.msgList instanceof Array &&
+            //             item.msgList.length > 0
+            //     )
+            // ) {
+            //     console.log("MESSAGE LIST!!!!!!!",...args);
+            //     var needRemoveIdx = [];
+            //     for (let idx in args[1].msgList) {
+            //         var item = args[1].msgList[idx];
+            //         if (item.msgType == 5 && item.subMsgType == 4) {
+            //             needRemoveIdx.push(idx);
+            //         }
+            //         console.log(item.recallTime, "<====>", item.elements,"<====>",item.elements[0].grayTipElement.revokeElement);
+            //     }
+
+            //     needRemoveIdx.sort((a, b) => b - a);
+            //     needRemoveIdx.forEach((i) => {
+            //         args[1].msgList.splice(i, 1);
+            //     });
+            // }
+
             if (
                 args.some(
                     (item) =>
@@ -36,8 +61,7 @@ function onBrowserWindowCreated(window) {
                 if (args1.cmdName.indexOf("onMsgInfoListUpdate") != -1) {
                     var msgList = args1.payload.msgList[0];
                     if (
-                        msgList.elements[0].grayTipElement != null 
-                        &&
+                        msgList.elements[0].grayTipElement != null &&
                         msgList.elements[0].grayTipElement.revokeElement == null
                     ) {
                         console.log(args[1][0].payload.msgList[0]);
