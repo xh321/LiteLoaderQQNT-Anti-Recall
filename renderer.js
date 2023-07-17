@@ -4,12 +4,12 @@ export function onLoad() {
         console.log("[Anti-Recall]", "尝试反撤回消息ID", msgId);
 
         var oldElement = document.querySelector(
-            `div[id='${msgId}-msgContainerMsgContent'] > .msg-content-container`
+            `div[id='${msgId}-msgContainerMsgContent']`
         );
 
         var newElement = document.querySelector(
             `.msg-content-container[id='${msgId}-msgContent']`
-        );
+        ).parentElement;
 
         if (oldElement != null)
             oldElement.style =
@@ -25,12 +25,12 @@ export function onLoad() {
             msgIdList.forEach((msgId) => {
                 try {
                     var oldElement = document.querySelector(
-                        `div[id='${msgId}-msgContainerMsgContent'] > .msg-content-container`
+                        `div[id='${msgId}-msgContainerMsgContent']`
                     );
 
                     var newElement = document.querySelector(
                         `.msg-content-container[id='${msgId}-msgContent']`
-                    );
+                    ).parentElement;
 
                     if (oldElement != null)
                         oldElement.style =
