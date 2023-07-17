@@ -4,7 +4,7 @@
     "name": "防撤回",
     "slug": "anti_recall",
     "description": "防止撤回",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "author": [
         {
             "name": "XiaoHe321",
