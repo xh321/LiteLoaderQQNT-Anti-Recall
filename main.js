@@ -9,13 +9,19 @@ const DELETE_MSG_COUNT_PER_TIME = 50;
 function onBrowserWindowCreated(window) {
     window.webContents.on("did-stop-loading", () => {
         //只针对主界面和独立聊天界面生效
-        if (window.webContents.getURL().indexOf("#/main/message") != -1 || window.webContents.getURL().indexOf("#/chat/") != -1) {
-
+        if (
+            window.webContents.getURL().indexOf("#/main/message") != -1 ||
+            window.webContents.getURL().indexOf("#/chat/") != -1
+        ) {
             //补充知识：
             //撤回的原理是，你先发了一条消息，这条消息有一个msgId，然后又撤回了他，那腾讯就会发一条一样msgId的撤回消息包来替换，这样你以后拉取的话，这个msgId只会对应一条撤回提示了；
             //本插件的原理是，先在内存中临时储存所有消息（1000条上限），然后如果有撤回发生，则将撤回的提示替换为之前保存的消息。
 
-            const original_send = window.webContents.__qqntim_original_object.send || window.webContents.send;
+            const original_send =
+                (window.webContents.__qqntim_original_object &&
+                    window.webContents.__qqntim_original_object.send) ||
+                window.webContents.send;
+                
             //var myUid = "";
             const patched_send = function (channel, ...args) {
                 if (args.length >= 2) {
@@ -166,7 +172,8 @@ function onBrowserWindowCreated(window) {
                 }
                 return original_send.call(window.webContents, channel, ...args);
             };
-            if (window.webContents.__qqntim_original_object) window.webContents.__qqntim_original_object.send = patched_send;
+            if (window.webContents.__qqntim_original_object)
+                window.webContents.__qqntim_original_object.send = patched_send;
             else window.webContents.send = patched_send;
 
             output("NTQQ Anti-Recall loaded");

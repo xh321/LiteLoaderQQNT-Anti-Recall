@@ -9,13 +9,13 @@ export function onLoad() {
 
         var newElement = document.querySelector(
             `.msg-content-container[id='${msgId}-msgContent']`
-        ).parentElement;
+        );
 
         if (oldElement != null)
             oldElement.style =
                 "border: 1px solid red;box-shadow: 0px 0px 15px 0px red;border-radius: 10px;text-decoration-line: line-through";
         else if (newElement != null)
-            newElement.style =
+            newElement.parentElement.style =
                 "border: 1px solid red;box-shadow: 0px 0px 15px 0px red;border-radius: 10px;text-decoration-line: line-through";
     });
     //消息列表更新回调
@@ -30,13 +30,13 @@ export function onLoad() {
 
                     var newElement = document.querySelector(
                         `.msg-content-container[id='${msgId}-msgContent']`
-                    ).parentElement;
+                    );
 
                     if (oldElement != null)
                         oldElement.style =
                             "border: 1px solid red;box-shadow: 0px 0px 15px 0px red;border-radius: 10px;text-decoration-line: line-through";
                     else if (newElement != null)
-                        newElement.style =
+                        newElement.parentElement.style =
                             "border: 1px solid red;box-shadow: 0px 0px 15px 0px red;border-radius: 10px;text-decoration-line: line-through";
 
                     if (timer != null) {
