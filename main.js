@@ -15,9 +15,9 @@ function onBrowserWindowCreated(window) {
             //撤回的原理是，你先发了一条消息，这条消息有一个msgId，然后又撤回了他，那腾讯就会发一条一样msgId的撤回消息包来替换，这样你以后拉取的话，这个msgId只会对应一条撤回提示了；
             //本插件的原理是，先在内存中临时储存所有消息（1000条上限），然后如果有撤回发生，则将撤回的提示替换为之前保存的消息。
 
-            const original_send = window.webContents.send;
+            const original_send = window.webContents.__qqntim_original_object.send || window.webContents.send;
             //var myUid = "";
-            window.webContents.send = function (channel, ...args) {
+            const patched_send = function (channel, ...args) {
                 if (args.length >= 2) {
                     //MessageList IPC 中能看到消息全量更新内容，其中包含撤回的提示，但并不包含被撤回的消息（被撤回的已经被替换掉了），需要替换撤回提示为之前保存的消息内容
                     if (
@@ -166,6 +166,8 @@ function onBrowserWindowCreated(window) {
                 }
                 return original_send.call(window.webContents, channel, ...args);
             };
+            if (window.webContents.__qqntim_original_object) window.webContents.__qqntim_original_object.send = patched_send;
+            else window.webContents.send = patched_send;
 
             output("NTQQ Anti-Recall loaded");
         }
