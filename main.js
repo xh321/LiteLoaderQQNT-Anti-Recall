@@ -21,7 +21,7 @@ function onBrowserWindowCreated(window) {
                 (window.webContents.__qqntim_original_object &&
                     window.webContents.__qqntim_original_object.send) ||
                 window.webContents.send;
-                
+
             //var myUid = "";
             const patched_send = function (channel, ...args) {
                 if (args.length >= 2) {
@@ -41,7 +41,12 @@ function onBrowserWindowCreated(window) {
                         for (let idx in args[1].msgList) {
                             var item = args[1].msgList[idx];
                             if (item.msgType == 5 && item.subMsgType == 4) {
-                                needUpdateIdx.push(idx);
+                                if (
+                                    !item.elements[0].grayTipElement
+                                        .revokeElement.isSelfOperate
+                                ) {
+                                    needUpdateIdx.push(idx);
+                                }
                             }
                             // console.log(
                             //     item.recallTime,
