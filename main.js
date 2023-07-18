@@ -187,7 +187,8 @@ function onBrowserWindowCreated(window) {
                     }
                 } catch (e) {
                     output(
-                        "NTQQ Anti-Recall Error: " + JSON.stringify(e),
+                        "NTQQ Anti-Recall Error: ",
+                        e,
                         "Please report this to https://github.com/xh321/LiteLoaderQQNT-Anti-Recall/issues, thank you"
                     );
                 }
