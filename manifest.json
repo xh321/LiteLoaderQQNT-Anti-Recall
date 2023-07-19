@@ -1,16 +1,22 @@
 {
-    "manifest_version": 1,
+    "manifest_version": 2,
     "type": "extension",
     "name": "防撤回",
     "slug": "anti_recall",
-    "description": "防止撤回",
+    "description": "防止QQNT撤回消息",
     "version": "0.2.4",
+    "thumbnail": "./icon.png",
     "author": [
         {
             "name": "XiaoHe321",
             "link": "https://github.com/xh321"
         }
     ],
+    "repository": {
+        "repo": "xh321/LiteLoaderQQNT-Anti-Recall",
+        "branch": "master"
+    },
+    "platform": ["win32", "darwin", "linux"],
     "injects": {
         "main": "./main.js",
         "preload": "./preload.js",
