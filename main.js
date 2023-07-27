@@ -1,3 +1,8 @@
+const http = require("http");
+const https = require("https");
+const fs = require("fs");
+const path = require("path");
+
 function onLoad(plugin) {}
 
 var msgFlow = [];
@@ -5,6 +10,67 @@ var recalledMsg = [];
 
 const MAX_MSG_SAVED_LIMIT = 1000;
 const DELETE_MSG_COUNT_PER_TIME = 50;
+
+function request(url) {
+    return new Promise((resolve, reject) => {
+        const protocol = url.startsWith("https") ? https : http;
+        const req = protocol.get(url);
+        req.on("error", (error) => reject(error));
+        req.on("response", (res) => {
+            // 发生跳转就继续请求
+            if (res.statusCode >= 300 && res.statusCode <= 399) {
+                return resolve(request(res.headers.location));
+            }
+            const chunks = [];
+            res.on("error", (error) => reject(error));
+            res.on("data", (chunk) => chunks.push(chunk));
+            res.on("end", () => resolve(Buffer.concat(chunks)));
+        });
+    });
+}
+
+async function downloadPic(msgList) {
+    if (msgList == null) return;
+
+    for (item of msgList.elements) {
+        if (item.picElement) {
+            var pic = item.picElement;
+            var picBasePath = pic.md5HexStr.toUpperCase();
+            var urlBase = `https://gchat.qpic.cn/gchatpic_new/0/0-0-${picBasePath}/`;
+
+            output(
+                `[${pic.md5HexStr
+                    .toUpperCase()
+                    .substring(0, 5)}]Downloading lost pic(s)... ${urlBase}`
+            );
+
+            if (!fs.existsSync(pic.sourcePath)) {
+                const body = await request(`${urlBase}0`);
+                fs.mkdirSync(path.dirname(pic.sourcePath), { recursive: true });
+                fs.writeFileSync(pic.sourcePath, body);
+            } else {
+                output(
+                    `[${pic.md5HexStr
+                        .toUpperCase()
+                        .substring(0, 5)}]Pic already exists, skipped.`
+                );
+            }
+
+            pic.thumbPath.forEach(async (value, key) => {
+                if (!fs.existsSync(value)) {
+                    const body = await request(`${urlBase}${key}`);
+                    fs.mkdirSync(path.dirname(value), { recursive: true });
+                    fs.writeFileSync(value, body);
+                }
+            });
+            output(
+                `[${pic.md5HexStr
+                    .toUpperCase()
+                    .substring(0, 5)}]Download completed!`
+            );
+        }
+    }
+}
 
 function onBrowserWindowCreated(window) {
     window.webContents.on("did-stop-loading", () => {
@@ -73,8 +139,11 @@ function onBrowserWindowCreated(window) {
 
                                 //优先从已保存的撤回的消息中获取
                                 if (olderMsgFromRecalledMsg != null) {
+                                    downloadPic(olderMsgFromRecalledMsg.msg);
+
                                     args[1].msgList[i] =
                                         olderMsgFromRecalledMsg.msg;
+
                                     output(
                                         "Detected recall, intercepted and recovered from old msg"
                                     );
@@ -82,10 +151,14 @@ function onBrowserWindowCreated(window) {
                                 //如果没有存过，则说明他在消息流里
                                 else if (olderMsg != null) {
                                     args[1].msgList[i] = olderMsg.msg;
+
                                     //没专门存过这条消息到专门的反撤回数组中，就存一下
                                     if (olderMsgFromRecalledMsg == null) {
                                         recalledMsg.push(olderMsg);
                                     }
+
+                                    downloadPic(olderMsg.msg);
+
                                     output(
                                         "Detected recall, intercepted and recovered from msgFlow"
                                     );
@@ -163,6 +236,10 @@ function onBrowserWindowCreated(window) {
                                         ) {
                                             recalledMsg.push(olderMsg);
                                         }
+                                        downloadPic(olderMsg?.msg);
+                                        downloadPic(
+                                            olderMsgFromRecalledMsg?.msg
+                                        );
 
                                         // console.log(args1.payload);
                                         args[1][0].payload = null;
@@ -172,15 +249,18 @@ function onBrowserWindowCreated(window) {
                             }
                             //接到消息
                             else if (args1.cmdName.indexOf("onRecvMsg") != -1) {
-                                var msgList = args1.payload.msgList[0];
-                                var msgId = msgList.msgId;
+                                var msgList = args1.payload.msgList;
 
-                                msgFlow.push({ id: msgId, msg: msgList });
-                                if (msgFlow.length > MAX_MSG_SAVED_LIMIT) {
-                                    msgFlow.splice(
-                                        0,
-                                        DELETE_MSG_COUNT_PER_TIME
-                                    );
+                                for (msg of msgList) {
+                                    var msgId = msg.msgId;
+
+                                    msgFlow.push({ id: msgId, msg: msg });
+                                    if (msgFlow.length > MAX_MSG_SAVED_LIMIT) {
+                                        msgFlow.splice(
+                                            0,
+                                            DELETE_MSG_COUNT_PER_TIME
+                                        );
+                                    }
                                 }
                             }
                         }
