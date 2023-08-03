@@ -6,12 +6,10 @@
     "description": "防止QQNT撤回消息",
     "version": "0.2.5",
     "thumbnail": "./icon.png",
-    "author": [
-        {
+    "author": {
             "name": "XiaoHe321",
             "link": "https://github.com/xh321"
-        }
-    ],
+        },
     "repository": {
         "repo": "xh321/LiteLoaderQQNT-Anti-Recall",
         "branch": "master"
