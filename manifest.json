@@ -1,5 +1,5 @@
 {
-    "manifest_version": 2,
+    "manifest_version": 3,
     "type": "extension",
     "name": "防撤回",
     "slug": "anti_recall",
