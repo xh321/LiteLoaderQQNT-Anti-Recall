@@ -3,7 +3,14 @@ const https = require("https");
 const fs = require("fs");
 const path = require("path");
 
-function onLoad(plugin) {}
+// const { Level } = require("level");
+// var db = null;
+
+function onLoad(plugin) {
+    //     db = new Level(path.join(plugin.path.data, "qq-recalled-db"), {
+    //         valueEncoding: "json"
+    //     });
+}
 
 var msgFlow = [];
 var recalledMsg = [];
@@ -52,17 +59,19 @@ async function downloadPic(msgList) {
                 output(
                     `[${pic.md5HexStr
                         .toUpperCase()
-                        .substring(0, 5)}]Pic already exists, skipped.`
+                        .substring(0, 5)}]Pic(s) already existed, skip.`
                 );
             }
 
-            pic.thumbPath.forEach(async (value, key) => {
-                if (!fs.existsSync(value)) {
-                    const body = await request(`${urlBase}${key}`);
-                    fs.mkdirSync(path.dirname(value), { recursive: true });
-                    fs.writeFileSync(value, body);
-                }
-            });
+            if (pic.thumbPath instanceof Array) {
+                pic.thumbPath.forEach(async (value, key) => {
+                    if (!fs.existsSync(value)) {
+                        const body = await request(`${urlBase}${key}`);
+                        fs.mkdirSync(path.dirname(value), { recursive: true });
+                        fs.writeFileSync(value, body);
+                    }
+                });
+            }
             output(
                 `[${pic.md5HexStr
                     .toUpperCase()
@@ -90,6 +99,16 @@ function onBrowserWindowCreated(window) {
 
             //var myUid = "";
             const patched_send = function (channel, ...args) {
+                // if (db != null) {
+                //     db.put("a", { x: 123 }, function (err) {
+                //         if (err) throw err;
+
+                //         db.get("a", function (err, value) {
+                //             console.log(value); // { x: 123 }
+                //         });
+                //     });
+                // }
+
                 try {
                     if (args.length >= 2) {
                         //MessageList IPC 中能看到消息全量更新内容，其中包含撤回的提示，但并不包含被撤回的消息（被撤回的已经被替换掉了），需要替换撤回提示为之前保存的消息内容
@@ -109,6 +128,10 @@ function onBrowserWindowCreated(window) {
                                 var item = args[1].msgList[idx];
                                 if (item.msgType == 5 && item.subMsgType == 4) {
                                     if (
+                                        item.elements[0].grayTipElement !=
+                                            null &&
+                                        item.elements[0].grayTipElement
+                                            .revokeElement != null &&
                                         !item.elements[0].grayTipElement
                                             .revokeElement.isSelfOperate
                                     ) {
@@ -182,6 +205,7 @@ function onBrowserWindowCreated(window) {
                             )
                         ) {
                             var args1 = args[1][0];
+                            if (args1 == null) return;
 
                             //方法一：获取个人信息的IPC，用来获取个人UID，避免防撤回自己的消息
                             // if (args1.cmdName.indexOf("onProfileDetailInfoChanged") != -1) {
@@ -190,28 +214,24 @@ function onBrowserWindowCreated(window) {
                             //目前采用方法二，直接获取撤回消息中的参数
                             //拦截撤回IPC
                             if (
+                                args1.cmdName != null &&
                                 args1.cmdName.indexOf("onMsgInfoListUpdate") !=
-                                -1
+                                    -1 &&
+                                args1.payload != null &&
+                                args1.payload.msgList instanceof Array
                             ) {
                                 var msgList = args1.payload.msgList[0];
-                                if (
-                                    msgList.elements[0].grayTipElement !=
-                                        null &&
-                                    msgList.elements[0].grayTipElement
-                                        .revokeElement == null
-                                ) {
-                                    console.log(args[1][0].payload.msgList[0]);
-                                    console.log(
-                                        "<========================================>"
-                                    );
-                                    console.log(msgList.elements[0]);
-                                }
+
                                 if (
                                     msgList.msgType == 5 &&
                                     msgList.subMsgType == 4
                                 ) {
                                     //不是自己撤回的，才拦截
                                     if (
+                                        msgList.elements[0].grayTipElement !=
+                                            null &&
+                                        msgList.elements[0].grayTipElement
+                                            .revokeElement != null &&
                                         !msgList.elements[0].grayTipElement
                                             .revokeElement.isSelfOperate
                                     ) {
@@ -236,19 +256,27 @@ function onBrowserWindowCreated(window) {
                                         ) {
                                             recalledMsg.push(olderMsg);
                                         }
+
                                         downloadPic(olderMsg?.msg);
                                         downloadPic(
                                             olderMsgFromRecalledMsg?.msg
                                         );
 
+                                        args[1][0].cmdName = "none";
+                                        args[1][0].payload.msgList.pop();
+
                                         // console.log(args1.payload);
-                                        args[1][0].payload = null;
                                         output("Detected recall, intercepted");
                                     }
                                 }
                             }
                             //接到消息
-                            else if (args1.cmdName.indexOf("onRecvMsg") != -1) {
+                            else if (
+                                args1.cmdName != null &&
+                                args1.cmdName.indexOf("onRecvMsg") != -1 &&
+                                args1.payload != null &&
+                                args1.payload.msgList instanceof Array
+                            ) {
                                 var msgList = args1.payload.msgList;
 
                                 for (msg of msgList) {
