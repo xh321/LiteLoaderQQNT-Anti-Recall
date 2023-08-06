@@ -25,6 +25,7 @@ export function onLoad() {
     //消息列表更新回调
     anti_recall.recallTipList((event, msgIdList) => {
         recalledMsgList = msgIdList;
+        render();
     });
 
     //监控消息列表，如果有撤回则渲染

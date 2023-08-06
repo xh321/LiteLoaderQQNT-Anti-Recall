@@ -3,13 +3,41 @@ const https = require("https");
 const fs = require("fs");
 const path = require("path");
 
-// const { Level } = require("level");
-// var db = null;
+const { Level } = require("level");
+var db = null;
 
-function onLoad(plugin) {
-    //     db = new Level(path.join(plugin.path.data, "qq-recalled-db"), {
-    //         valueEncoding: "json"
-    //     });
+async function onLoad(plugin) {
+    db = new Level(path.join(plugin.path.data, "qq-recalled-db"), {
+        valueEncoding: "json"
+    });
+
+    output("Loading recalled msgs from db...");
+    var counter = 0;
+    for await (const value of db.values()) {
+        counter++;
+        recalledMsg.push(value);
+        if (value.msg == null) continue;
+        for (item of value.msg.elements) {
+            if (item.picElement != null) {
+                item.picElement = null;
+                item.elementType = 1;
+                item.textElement = {
+                    content: "[暂不支持图片消息恢复，请等待反撤回版本更新]",
+                    atType: 0,
+                    atUid: "0",
+                    atTinyId: "0",
+                    atNtUid: "",
+                    subElementType: 0,
+                    atChannelId: "0",
+                    atRoleId: "0",
+                    atRoleColor: 0,
+                    atRoleName: "",
+                    needNotify: 0
+                };
+            }
+        }
+    }
+    output(`Loaded ${counter} msgs.`);
 }
 
 var msgFlow = [];
@@ -81,6 +109,31 @@ async function downloadPic(msgList) {
     }
 }
 
+function insertDb(msg) {
+    if (db != null) {
+        db.get(msg.id, (error, value) => {
+            if (error.status == 404) {
+                db.put(msg.id, msg, (err) => {
+                    if (err) throw err;
+                });
+            } else {
+                if (error) throw error;
+            }
+        });
+    }
+}
+
+async function getMsgById(id) {
+    if (db != null) {
+        try {
+            return await db.get(id);
+        } catch {
+            return null;
+        }
+    }
+    return null;
+}
+
 function onBrowserWindowCreated(window) {
     window.webContents.on("did-stop-loading", () => {
         //只针对主界面和独立聊天界面生效
@@ -88,6 +141,25 @@ function onBrowserWindowCreated(window) {
             window.webContents.getURL().indexOf("#/main/message") != -1 ||
             window.webContents.getURL().indexOf("#/chat/") != -1
         ) {
+            // const proxyEvents = new Proxy(
+            //     window.webContents._events["-ipc-message"],
+            //     {
+            //         // 拦截函数调用
+            //         apply(target, thisArg, argumentsList) {
+            //             if (
+            //                 argumentsList[3][0]["eventName"] &&
+            //                 !argumentsList[3][0]["eventName"].includes(
+            //                     "ns-Logger"
+            //                 )
+            //             ) {
+            //                 output(JSON.stringify(argumentsList));
+            //             }
+            //             return target.apply(thisArg, argumentsList);
+            //         }
+            //     }
+            // );
+            // window.webContents._events["-ipc-message"] = proxyEvents;
+
             //补充知识：
             //撤回的原理是，你先发了一条消息，这条消息有一个msgId，然后又撤回了他，那腾讯就会发一条一样msgId的撤回消息包来替换，这样你以后拉取的话，这个msgId只会对应一条撤回提示了；
             //本插件的原理是，先在内存中临时储存所有消息（1000条上限），然后如果有撤回发生，则将撤回的提示替换为之前保存的消息。
@@ -99,6 +171,7 @@ function onBrowserWindowCreated(window) {
 
             //var myUid = "";
             const patched_send = function (channel, ...args) {
+                //output(channel, JSON.stringify(args));
                 // if (db != null) {
                 //     db.put("a", { x: 123 }, function (err) {
                 //         if (err) throw err;
@@ -160,12 +233,47 @@ function onBrowserWindowCreated(window) {
                                     (i) => i.id == currMsgId
                                 );
 
+                                //var dbMsg = getMsgById(currMsgId);
+
                                 //优先从已保存的撤回的消息中获取
                                 if (olderMsgFromRecalledMsg != null) {
+                                    // original_send.call(
+                                    //     window.webContents,
+                                    //     channel,
+                                    //     {
+                                    //         type: "request",
+                                    //         eventName: "ns-ntApi-2"
+                                    //     },
+                                    //     [
+                                    //         {
+                                    //             cmdName:
+                                    //                 "nodeIKernelMsgListener/onRecvMsg",
+                                    //             cmdType: "event",
+                                    //             payload: {
+                                    //                 msgList: [
+                                    //                     olderMsgFromRecalledMsg.msg
+                                    //                 ]
+                                    //             }
+                                    //         }
+                                    //     ]
+                                    // );
+
                                     downloadPic(olderMsgFromRecalledMsg.msg);
+
+                                    console.log(
+                                        JSON.stringify(
+                                            olderMsgFromRecalledMsg.msg
+                                        )
+                                    );
 
                                     args[1].msgList[i] =
                                         olderMsgFromRecalledMsg.msg;
+
+                                    console.log(
+                                        JSON.stringify(
+                                            olderMsgFromRecalledMsg.msg
+                                        )
+                                    );
 
                                     output(
                                         "Detected recall, intercepted and recovered from old msg"
@@ -186,6 +294,20 @@ function onBrowserWindowCreated(window) {
                                         "Detected recall, intercepted and recovered from msgFlow"
                                     );
                                 }
+                                // else if (dbMsg != null) {
+                                //     args[1].msgList[i] = dbMsg.msg;
+
+                                //     //没专门存过这条消息到专门的反撤回数组中，就存一下
+                                //     if (olderMsgFromRecalledMsg == null) {
+                                //         recalledMsg.push(dbMsg);
+                                //     }
+
+                                //     downloadPic(dbMsg.msg);
+
+                                //     output(
+                                //         "Detected recall, intercepted and recovered from dbMsg"
+                                //     );
+                                // }
                             });
 
                             window.webContents.send(
@@ -255,6 +377,7 @@ function onBrowserWindowCreated(window) {
                                             olderMsgFromRecalledMsg == null
                                         ) {
                                             recalledMsg.push(olderMsg);
+                                            insertDb(olderMsg);
                                         }
 
                                         downloadPic(olderMsg?.msg);
@@ -281,7 +404,6 @@ function onBrowserWindowCreated(window) {
 
                                 for (msg of msgList) {
                                     var msgId = msg.msgId;
-
                                     msgFlow.push({ id: msgId, msg: msg });
                                     if (msgFlow.length > MAX_MSG_SAVED_LIMIT) {
                                         msgFlow.splice(
