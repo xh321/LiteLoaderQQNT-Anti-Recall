@@ -2,42 +2,144 @@ const http = require("http");
 const https = require("https");
 const fs = require("fs");
 const path = require("path");
+const { ipcMain, dialog } = require("electron");
+
+var configFilePath = "";
 
 const { Level } = require("level");
 var db = null;
 
+var sampleConfig = {
+    mainColor: "#ff6d6d",
+    saveDb: false,
+    enableShadow: true,
+    enableTip: true
+};
+
+var nowConfig = {};
+
+function initConfig() {
+    fs.writeFileSync(
+        configFilePath,
+        JSON.stringify(sampleConfig, null, 2),
+        "utf-8"
+    );
+}
+
+function loadConfig() {
+    if (!fs.existsSync(configFilePath)) {
+        initConfig();
+        return sampleConfig;
+    } else {
+        return JSON.parse(fs.readFileSync(configFilePath, "utf-8"));
+    }
+}
+
 async function onLoad(plugin) {
+    configFilePath = path.join(plugin.path.data, "config.json");
+    nowConfig = loadConfig();
+
+    if (nowConfig.mainColor == null) {
+        nowConfig.mainColor = "#ff6d6d";
+    }
+    if (nowConfig.enableShadow == null) {
+        nowConfig.enableShadow = true;
+    }
+    if (nowConfig.enableTip == null) {
+        nowConfig.enableTip = true;
+    }
+    fs.writeFileSync(
+        configFilePath,
+        JSON.stringify(nowConfig, null, 2),
+        "utf-8"
+    );
+
+    ipcMain.handle(
+        "LiteLoader.anti_recall.getNowConfig",
+        async (event, message) => {
+            return nowConfig;
+        }
+    );
+
+    ipcMain.handle(
+        "LiteLoader.anti_recall.saveConfig",
+        async (event, config) => {
+            nowConfig = config;
+            sendChatWindowsMessage(
+                "LiteLoader.anti_recall.mainWindow.repatchCss"
+            );
+            fs.writeFileSync(
+                configFilePath,
+                JSON.stringify(config, null, 2),
+                "utf-8"
+            );
+        }
+    );
+
     db = new Level(path.join(plugin.path.data, "qq-recalled-db"), {
         valueEncoding: "json"
     });
 
-    output("Loading recalled msgs from db...");
-    var counter = 0;
-    for await (const value of db.values()) {
-        counter++;
-        recalledMsg.push(value);
-        if (value.msg == null) continue;
-        for (item of value.msg.elements) {
-            if (item.picElement != null) {
-                item.picElement = null;
-                item.elementType = 1;
-                item.textElement = {
-                    content: "[暂不支持图片消息恢复，请等待反撤回版本更新]",
-                    atType: 0,
-                    atUid: "0",
-                    atTinyId: "0",
-                    atNtUid: "",
-                    subElementType: 0,
-                    atChannelId: "0",
-                    atRoleId: "0",
-                    atRoleColor: 0,
-                    atRoleName: "",
-                    needNotify: 0
-                };
+    ipcMain.handle("LiteLoader.anti_recall.clearDb", async (event, message) => {
+        dialog
+            .showMessageBox({
+                type: "warning",
+                title: "警告",
+                message: "清空所有已储存的撤回消息后不可恢复，是否确认清空？",
+                buttons: ["确定", "取消"],
+                cancelId: 1
+            })
+            .then(async (idx) => {
+                //第一个按钮
+                if (idx.response == 0) {
+                    await db.clear();
+                    dialog.showMessageBox({
+                        type: "info",
+                        title: "提示",
+                        message:
+                            "清空完毕，之前保存的所有已撤回消息均被删除，重启QQ后就能看见效果。",
+                        buttons: ["确定"]
+                    });
+                }
+            });
+    });
+
+    (async () => {
+        if (nowConfig.saveDb) {
+            output("Loading recalled msgs from db...");
+            var counter = 0;
+            for await (const value of db.values()) {
+                counter++;
+                recalledMsg.push(value);
+                if (value.msg == null) continue;
+                for (item of value.msg.elements) {
+                    if (item.picElement != null) {
+                        item.picElement = null;
+                        item.elementType = 1;
+                        item.textElement = {
+                            content:
+                                "[暂不支持图片消息恢复，请等待反撤回版本更新]",
+                            atType: 0,
+                            atUid: "0",
+                            atTinyId: "0",
+                            atNtUid: "",
+                            subElementType: 0,
+                            atChannelId: "0",
+                            atRoleId: "0",
+                            atRoleColor: 0,
+                            atRoleName: "",
+                            needNotify: 0
+                        };
+                    }
+                }
             }
+            output(`Loaded ${counter} msgs.`);
+        } else {
+            output("Db saving is disabled, continue.");
         }
-    }
-    output(`Loaded ${counter} msgs.`);
+    })().catch((e) => {
+        output("Error while loading recalled msgs from db: " + e.toString());
+    });
 }
 
 var msgFlow = [];
@@ -134,6 +236,14 @@ async function getMsgById(id) {
     return null;
 }
 
+function sendChatWindowsMessage(message) {
+    for (var window of mainWindowObjs) {
+        if (window.isDestroyed()) continue;
+        window.webContents.send(message);
+    }
+}
+
+var mainWindowObjs = [];
 function onBrowserWindowCreated(window) {
     window.webContents.on("did-stop-loading", () => {
         //只针对主界面和独立聊天界面生效
@@ -141,6 +251,7 @@ function onBrowserWindowCreated(window) {
             window.webContents.getURL().indexOf("#/main/message") != -1 ||
             window.webContents.getURL().indexOf("#/chat/") != -1
         ) {
+            mainWindowObjs.push(window);
             // const proxyEvents = new Proxy(
             //     window.webContents._events["-ipc-message"],
             //     {
@@ -260,20 +371,8 @@ function onBrowserWindowCreated(window) {
 
                                     downloadPic(olderMsgFromRecalledMsg.msg);
 
-                                    console.log(
-                                        JSON.stringify(
-                                            olderMsgFromRecalledMsg.msg
-                                        )
-                                    );
-
                                     args[1].msgList[i] =
                                         olderMsgFromRecalledMsg.msg;
-
-                                    console.log(
-                                        JSON.stringify(
-                                            olderMsgFromRecalledMsg.msg
-                                        )
-                                    );
 
                                     output(
                                         "Detected recall, intercepted and recovered from old msg"
@@ -377,7 +476,9 @@ function onBrowserWindowCreated(window) {
                                             olderMsgFromRecalledMsg == null
                                         ) {
                                             recalledMsg.push(olderMsg);
-                                            insertDb(olderMsg);
+                                            if (nowConfig.saveDb) {
+                                                insertDb(olderMsg);
+                                            }
                                         }
 
                                         downloadPic(olderMsg?.msg);
