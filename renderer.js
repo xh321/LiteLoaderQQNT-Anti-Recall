@@ -432,12 +432,18 @@ export async function onLoad() {
             `.message[id='ml-${msgId}'] .msg-content-container`
         );
 
+        var cardElement = document.querySelector(
+            `div[id='${msgId}-msgContent']`
+        );
+
         if (oldElement != null) {
             await appendRecalledTag(oldElement);
         } else if (newElement != null) {
             await appendRecalledTag(newElement.parentElement);
         } else if (unixElement != null) {
             await appendRecalledTag(unixElement.parentElement);
+        } else if (cardElement != null) {
+            await appendRecalledTag(cardElement.parentElement);
         }
     });
     //消息列表更新回调
@@ -491,11 +497,17 @@ export async function onLoad() {
                     `.message[id='ml-${msgId}'] .msg-content-container`
                 );
 
+                var cardElement = document.querySelector(
+                    `div[id='${msgId}-msgContent']`
+                );
+
                 if (oldElement != null) await appendRecalledTag(oldElement);
                 else if (newElement != null)
                     await appendRecalledTag(newElement.parentElement);
                 else if (unixElement != null)
                     await appendRecalledTag(unixElement.parentElement);
+                else if (cardElement != null)
+                    await appendRecalledTag(cardElement.parentElement);
             } catch (e) {
                 console.log("[Anti-Recall]", "反撤回消息时出错", e);
             }
