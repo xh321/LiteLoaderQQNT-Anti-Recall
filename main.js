@@ -36,6 +36,9 @@ function loadConfig() {
 }
 
 async function onLoad(plugin) {
+    if (!fs.existsSync(plugin.path.data)) {
+        fs.mkdirSync(plugin.path.data, { recursive: true });
+    }
     configFilePath = path.join(plugin.path.data, "config.json");
     nowConfig = loadConfig();
 
