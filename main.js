@@ -117,22 +117,11 @@ async function onLoad(plugin) {
                 if (value.msg == null) continue;
                 for (item of value.msg.elements) {
                     if (item.picElement != null) {
-                        item.picElement = null;
-                        item.elementType = 1;
-                        item.textElement = {
-                            content:
-                                "[暂不支持图片消息恢复，请等待反撤回版本更新]",
-                            atType: 0,
-                            atUid: "0",
-                            atTinyId: "0",
-                            atNtUid: "",
-                            subElementType: 0,
-                            atChannelId: "0",
-                            atRoleId: "0",
-                            atRoleColor: 0,
-                            atRoleName: "",
-                            needNotify: 0
-                        };
+                        item.picElement.thumbPath = new Map([
+                            [0, item.picElement.sourcePath.replace("Ori", "Thumb").replace(item.picElement.md5HexStr, item.picElement.md5HexStr+"_0")],
+                            [198, item.picElement.sourcePath.replace("Ori", "Thumb").replace(item.picElement.md5HexStr, item.picElement.md5HexStr+"_198")],
+                            [720, item.picElement.sourcePath.replace("Ori", "Thumb").replace(item.picElement.md5HexStr, item.picElement.md5HexStr+"_720")]
+                        ]);
                     }
                 }
             }
