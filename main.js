@@ -431,7 +431,11 @@ function onBrowserWindowCreated(window) {
                             window.webContents.send(
                                 "LiteLoader.anti_recall.mainWindow.recallTipList",
                                 recalledMsg
-                                    .filter((i) => i.sender == currentMsgPeer)
+                                    .filter(
+                                        (i) =>
+                                            i.sender == currentMsgPeer ||
+                                            i?.sender == null
+                                    )
                                     .map((i) => i.id)
                             );
                         }
