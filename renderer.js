@@ -421,19 +421,19 @@ export async function onLoad() {
         console.log("[Anti-Recall]", "尝试反撤回消息ID", msgId);
 
         var oldElement = document.querySelector(
-            `div[id='${msgId}-msgContainerMsgContent']`
+            `div:not(.gray-tip-message)[id='${msgId}-msgContainerMsgContent']`
         );
 
         var newElement = document.querySelector(
-            `.msg-content-container[id='${msgId}-msgContent']`
+            `.msg-content-container:not(.gray-tip-message)[id='${msgId}-msgContent']`
         );
 
         var unixElement = document.querySelector(
-            `.message[id='ml-${msgId}'] .msg-content-container`
+            `.message:not(.gray-tip-message)[id='ml-${msgId}'] .msg-content-container:not(.gray-tip-message)`
         );
 
         var cardElement = document.querySelector(
-            `div[id='${msgId}-msgContent']`
+            `div:not(.gray-tip-message)[id='${msgId}-msgContent']`
         );
 
         if (oldElement != null) {
@@ -486,19 +486,19 @@ export async function onLoad() {
         for (var msgId of recalledMsgList) {
             try {
                 var oldElement = document.querySelector(
-                    `div[id='${msgId}-msgContainerMsgContent']`
+                    `div:not(.gray-tip-message)[id='${msgId}-msgContainerMsgContent']`
                 );
-
+        
                 var newElement = document.querySelector(
-                    `.msg-content-container[id='${msgId}-msgContent']`
+                    `.msg-content-container:not(.gray-tip-message)[id='${msgId}-msgContent']`
                 );
-
+        
                 var unixElement = document.querySelector(
-                    `.message[id='ml-${msgId}'] .msg-content-container`
+                    `.message:not(.gray-tip-message)[id='ml-${msgId}'] .msg-content-container:not(.gray-tip-message)`
                 );
-
+        
                 var cardElement = document.querySelector(
-                    `div[id='${msgId}-msgContent']`
+                    `div:not(.gray-tip-message)[id='${msgId}-msgContent']`
                 );
 
                 if (oldElement != null) await appendRecalledTag(oldElement);
