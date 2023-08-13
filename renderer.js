@@ -420,25 +420,26 @@ export async function onLoad() {
     anti_recall.recallTip(async (event, msgId) => {
         console.log("[Anti-Recall]", "尝试反撤回消息ID", msgId);
 
-        var oldElement = document.querySelector(
-            `div:not(.gray-tip-message)[id='${msgId}-msgContainerMsgContent']`
-        );
+        var oldElement = document
+            .getElementById(`${msgId}-msgContainerMsgContent`)
+            ?.parentElement?.querySelector("*:not(.gray-tip-message)");
 
-        var newElement = document.querySelector(
-            `.msg-content-container:not(.gray-tip-message)[id='${msgId}-msgContent']`
-        );
+        var newElement = document
+            .getElementById(`${msgId}-msgContent`)
+            ?.parentElement?.querySelector("*:not(.gray-tip-message)");
 
-        var unixElement = document.querySelector(
-            `.message:not(.gray-tip-message)[id='ml-${msgId}'] .msg-content-container:not(.gray-tip-message)`
-        );
+        var unixElement = document
+            .getElementById(`ml-${msgId}`)
+            ?.parentElement?.querySelector("*:not(.gray-tip-message)")
+            ?.querySelector(".msg-content-container");
 
-        var cardElement = document.querySelector(
-            `div:not(.gray-tip-message)[id='${msgId}-msgContent']`
-        );
+        var cardElement = document
+            .getElementById(`${msgId}-msgContent`)
+            ?.parentElement?.querySelector("*:not(.gray-tip-message)");
 
-        var arkElement = document.querySelector(
-            `div:not(.gray-tip-message)[id='ark-msg-content-container_${msgId}']`
-        );
+        var arkElement = document
+            .getElementById(`ark-msg-content-container_${msgId}`)
+            ?.parentElement?.querySelector("*:not(.gray-tip-message)");
 
         if (oldElement != null) {
             await appendRecalledTag(oldElement);
@@ -491,25 +492,26 @@ export async function onLoad() {
 
         for (var msgId of recalledMsgList) {
             try {
-                var oldElement = document.querySelector(
-                    `div:not(.gray-tip-message)[id='${msgId}-msgContainerMsgContent']`
-                );
+                var oldElement = document
+                    .getElementById(`${msgId}-msgContainerMsgContent`)
+                    ?.parentElement?.querySelector("*:not(.gray-tip-message)");
 
-                var newElement = document.querySelector(
-                    `.msg-content-container:not(.gray-tip-message)[id='${msgId}-msgContent']`
-                );
+                var newElement = document
+                    .getElementById(`${msgId}-msgContent`)
+                    ?.parentElement?.querySelector("*:not(.gray-tip-message)");
 
-                var unixElement = document.querySelector(
-                    `.message:not(.gray-tip-message)[id='ml-${msgId}'] .msg-content-container:not(.gray-tip-message)`
-                );
+                var unixElement = document
+                    .getElementById(`ml-${msgId}`)
+                    ?.parentElement?.querySelector("*:not(.gray-tip-message)")
+                    ?.querySelector(".msg-content-container");
 
-                var cardElement = document.querySelector(
-                    `div:not(.gray-tip-message)[id='${msgId}-msgContent']`
-                );
+                var cardElement = document
+                    .getElementById(`${msgId}-msgContent`)
+                    ?.parentElement?.querySelector("*:not(.gray-tip-message)");
 
-                var arkElement = document.querySelector(
-                    `div:not(.gray-tip-message)[id='ark-msg-content-container_${msgId}']`
-                );
+                var arkElement = document
+                    .getElementById(`ark-msg-content-container_${msgId}`)
+                    ?.parentElement?.querySelector("*:not(.gray-tip-message)");
 
                 if (oldElement != null) await appendRecalledTag(oldElement);
                 else if (newElement != null)
@@ -528,6 +530,7 @@ export async function onLoad() {
 
     async function appendRecalledTag(msgElement) {
         if (!msgElement) return;
+
         var nowConfig = await window.anti_recall.getNowConfig();
 
         var currRecalledTip = msgElement.querySelector(

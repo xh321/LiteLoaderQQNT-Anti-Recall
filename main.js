@@ -322,10 +322,13 @@ function onBrowserWindowCreated(window) {
                                     item.msgList.length > 0
                             )
                         ) {
+                            var currentMsgPeer = "";
+
                             //撤回提示所在的msgList下标数组，在后面需要一个个替换为真实的消息
                             var needUpdateIdx = [];
                             for (let idx in args[1].msgList) {
                                 var item = args[1].msgList[idx];
+                                currentMsgPeer = item.peerUid;
                                 if (item.msgType == 5 && item.subMsgType == 4) {
                                     if (
                                         item.elements[0].grayTipElement !=
@@ -427,7 +430,9 @@ function onBrowserWindowCreated(window) {
 
                             window.webContents.send(
                                 "LiteLoader.anti_recall.mainWindow.recallTipList",
-                                recalledMsg.map((i) => i.id)
+                                recalledMsg
+                                    .filter((i) => i.sender == currentMsgPeer)
+                                    .map((i) => i.id)
                             );
                         }
 
@@ -521,7 +526,11 @@ function onBrowserWindowCreated(window) {
 
                                 for (msg of msgList) {
                                     var msgId = msg.msgId;
-                                    msgFlow.push({ id: msgId, msg: msg });
+                                    msgFlow.push({
+                                        id: msgId,
+                                        sender: msg.peerUid,
+                                        msg: msg
+                                    });
                                     if (msgFlow.length > MAX_MSG_SAVED_LIMIT) {
                                         msgFlow.splice(
                                             0,
@@ -539,6 +548,7 @@ function onBrowserWindowCreated(window) {
                         "Please report this to https://github.com/xh321/LiteLoaderQQNT-Anti-Recall/issues, thank you"
                     );
                 }
+
                 return original_send.call(window.webContents, channel, ...args);
             };
             if (window.webContents.__qqntim_original_object)
