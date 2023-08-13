@@ -436,6 +436,10 @@ export async function onLoad() {
             `div:not(.gray-tip-message)[id='${msgId}-msgContent']`
         );
 
+        var arkElement = document.querySelector(
+            `div:not(.gray-tip-message)[id='ark-msg-content-container_${msgId}']`
+        );
+
         if (oldElement != null) {
             await appendRecalledTag(oldElement);
         } else if (newElement != null) {
@@ -444,6 +448,8 @@ export async function onLoad() {
             await appendRecalledTag(unixElement.parentElement);
         } else if (cardElement != null) {
             await appendRecalledTag(cardElement.parentElement);
+        } else if (arkElement != null) {
+            await appendRecalledTag(arkElement.parentElement);
         }
     });
     //消息列表更新回调
@@ -488,17 +494,21 @@ export async function onLoad() {
                 var oldElement = document.querySelector(
                     `div:not(.gray-tip-message)[id='${msgId}-msgContainerMsgContent']`
                 );
-        
+
                 var newElement = document.querySelector(
                     `.msg-content-container:not(.gray-tip-message)[id='${msgId}-msgContent']`
                 );
-        
+
                 var unixElement = document.querySelector(
                     `.message:not(.gray-tip-message)[id='ml-${msgId}'] .msg-content-container:not(.gray-tip-message)`
                 );
-        
+
                 var cardElement = document.querySelector(
                     `div:not(.gray-tip-message)[id='${msgId}-msgContent']`
+                );
+
+                var arkElement = document.querySelector(
+                    `div:not(.gray-tip-message)[id='ark-msg-content-container_${msgId}']`
                 );
 
                 if (oldElement != null) await appendRecalledTag(oldElement);
@@ -508,6 +518,8 @@ export async function onLoad() {
                     await appendRecalledTag(unixElement.parentElement);
                 else if (cardElement != null)
                     await appendRecalledTag(cardElement.parentElement);
+                else if (arkElement != null)
+                    await appendRecalledTag(arkElement.parentElement);
             } catch (e) {
                 console.log("[Anti-Recall]", "反撤回消息时出错", e);
             }
