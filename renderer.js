@@ -354,7 +354,6 @@ export async function onConfigView(view) {
         await window.anti_recall.saveConfig(nowConfig);
     });
 
-
     //阴影开关
     var q_switch_shadow = node2.querySelector("#switchShadow");
 
@@ -505,17 +504,26 @@ export async function onLoad() {
                 ) {
                     //是添加的撤回标记，直接忽略
                 } else {
-                    await render();
+                    render();
                 }
             }
         }
     });
 
-    console.log("[Anti-Recall]", "已在当前页面加载反撤回");
 
-    const targetNode = document.body;
-    const config = { attributes: true, childList: true, subtree: true };
-    observer.observe(targetNode, config);
+    var finder = setInterval(() => {
+        if (document.querySelector(".ml-list.list")) {
+            clearInterval(finder);
+            console.log("[Anti-Recall]", "检测到聊天区域，已在当前页面加载反撤回");
+            const targetNode = document.querySelector(".ml-list.list");
+            const config = {
+                attributes: false,
+                childList: true,
+                subtree: true
+            };
+            observer.observe(targetNode, config);
+        }
+    }, 100);
 
     async function render() {
         //console.log("[Anti-Recall]", "尝试反撤回消息列表", recalledMsgList);
