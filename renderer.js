@@ -449,36 +449,36 @@ export async function onLoad() {
     anti_recall.recallTip(async (event, msgId) => {
         console.log("[Anti-Recall]", "尝试反撤回消息ID", msgId);
 
-        var oldElement = document
-            .getElementById(`${msgId}-msgContainerMsgContent`)
-            ?.parentElement?.querySelector("*:not(.gray-tip-message)");
+        var oldElement = document.getElementById(
+            `${msgId}-msgContainerMsgContent`
+        );
 
-        var newElement = document
-            .getElementById(`${msgId}-msgContent`)
-            ?.parentElement?.querySelector("*:not(.gray-tip-message)");
+        var newElement = document.getElementById(`${msgId}-msgContent`);
 
         var unixElement = document
             .getElementById(`ml-${msgId}`)
-            ?.parentElement?.querySelector("*:not(.gray-tip-message)")
             ?.querySelector(".msg-content-container");
 
-        var cardElement = document
-            .getElementById(`${msgId}-msgContent`)
-            ?.parentElement?.querySelector("*:not(.gray-tip-message)");
+        var cardElement = document.getElementById(`${msgId}-msgContent`);
 
-        var arkElement = document
-            .getElementById(`ark-msg-content-container_${msgId}`)
-            ?.parentElement?.querySelector("*:not(.gray-tip-message)");
+        var arkElement = document.getElementById(
+            `ark-msg-content-container_${msgId}`
+        );
 
         if (oldElement != null) {
+            if (oldElement.classList.contains("gray-tip-message")) return;
             await appendRecalledTag(oldElement);
         } else if (newElement != null) {
+            if (newElement.classList.contains("gray-tip-message")) return;
             await appendRecalledTag(newElement.parentElement);
         } else if (unixElement != null) {
+            if (unixElement.classList.contains("gray-tip-message")) return;
             await appendRecalledTag(unixElement.parentElement);
         } else if (cardElement != null) {
+            if (cardElement.classList.contains("gray-tip-message")) return;
             await appendRecalledTag(cardElement.parentElement);
         } else if (arkElement != null) {
+            if (arkElement.classList.contains("gray-tip-message")) return;
             await appendRecalledTag(arkElement.parentElement);
         }
     });
@@ -510,11 +510,13 @@ export async function onLoad() {
         }
     });
 
-
     var finder = setInterval(() => {
         if (document.querySelector(".ml-list.list")) {
             clearInterval(finder);
-            console.log("[Anti-Recall]", "检测到聊天区域，已在当前页面加载反撤回");
+            console.log(
+                "[Anti-Recall]",
+                "检测到聊天区域，已在当前页面加载反撤回"
+            );
             const targetNode = document.querySelector(".ml-list.list");
             const config = {
                 attributes: false,
@@ -530,36 +532,38 @@ export async function onLoad() {
 
         for (var msgId of recalledMsgList) {
             try {
-                var oldElement = document
-                    .getElementById(`${msgId}-msgContainerMsgContent`)
-                    ?.parentElement?.querySelector("*:not(.gray-tip-message)");
-
-                var newElement = document
-                    .getElementById(`${msgId}-msgContent`)
-                    ?.parentElement?.querySelector("*:not(.gray-tip-message)");
-
+                var oldElement = document.getElementById(
+                    `${msgId}-msgContainerMsgContent`
+                );
+        
+                var newElement = document.getElementById(`${msgId}-msgContent`);
+        
                 var unixElement = document
                     .getElementById(`ml-${msgId}`)
-                    ?.parentElement?.querySelector("*:not(.gray-tip-message)")
                     ?.querySelector(".msg-content-container");
-
-                var cardElement = document
-                    .getElementById(`${msgId}-msgContent`)
-                    ?.parentElement?.querySelector("*:not(.gray-tip-message)");
-
-                var arkElement = document
-                    .getElementById(`ark-msg-content-container_${msgId}`)
-                    ?.parentElement?.querySelector("*:not(.gray-tip-message)");
-
-                if (oldElement != null) await appendRecalledTag(oldElement);
-                else if (newElement != null)
+        
+                var cardElement = document.getElementById(`${msgId}-msgContent`);
+        
+                var arkElement = document.getElementById(
+                    `ark-msg-content-container_${msgId}`
+                );
+        
+                if (oldElement != null) {
+                    if (oldElement.classList.contains("gray-tip-message")) continue;
+                    await appendRecalledTag(oldElement);
+                } else if (newElement != null) {
+                    if (newElement.classList.contains("gray-tip-message")) continue;
                     await appendRecalledTag(newElement.parentElement);
-                else if (unixElement != null)
+                } else if (unixElement != null) {
+                    if (unixElement.classList.contains("gray-tip-message")) continue;
                     await appendRecalledTag(unixElement.parentElement);
-                else if (cardElement != null)
+                } else if (cardElement != null) {
+                    if (cardElement.classList.contains("gray-tip-message")) continue;
                     await appendRecalledTag(cardElement.parentElement);
-                else if (arkElement != null)
+                } else if (arkElement != null) {
+                    if (arkElement.classList.contains("gray-tip-message")) continue;
                     await appendRecalledTag(arkElement.parentElement);
+                }
             } catch (e) {
                 console.log("[Anti-Recall]", "反撤回消息时出错", e);
             }
