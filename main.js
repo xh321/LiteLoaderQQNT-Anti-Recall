@@ -13,7 +13,8 @@ var sampleConfig = {
     mainColor: "#ff6d6d",
     saveDb: false,
     enableShadow: true,
-    enableTip: true
+    enableTip: true,
+    isAntiRecallSelfMsg: false
 };
 
 var nowConfig = {};
@@ -335,8 +336,9 @@ function onBrowserWindowCreated(window) {
                                             null &&
                                         item.elements[0].grayTipElement
                                             .revokeElement != null &&
-                                        !item.elements[0].grayTipElement
-                                            .revokeElement.isSelfOperate
+                                        (nowConfig.isAntiRecallSelfMsg ||
+                                            !item.elements[0].grayTipElement
+                                                .revokeElement.isSelfOperate)
                                     ) {
                                         needUpdateIdx.push(idx);
                                     }
@@ -478,8 +480,9 @@ function onBrowserWindowCreated(window) {
                                             null &&
                                         msgList.elements[0].grayTipElement
                                             .revokeElement != null &&
-                                        !msgList.elements[0].grayTipElement
-                                            .revokeElement.isSelfOperate
+                                        (nowConfig.isAntiRecallSelfMsg ||
+                                            !msgList.elements[0].grayTipElement
+                                                .revokeElement.isSelfOperate)
                                     ) {
                                         window.webContents.send(
                                             "LiteLoader.anti_recall.mainWindow.recallTip",

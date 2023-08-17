@@ -28,6 +28,18 @@ export async function onConfigView(view) {
                 </div>
               </div>
 
+            <hr class="horizontal-dividing-line" />
+              <div class="vertical-list-item">
+                <div style="width:90%;" >
+                  <h2>是否反撤回自己的消息</h2>
+                  <span class="secondary-text">如果开启，则自己发送的消息也会被反撤回。开启后，从下一条消息开始起生效。</span>
+                </div>
+                <div id="switchAntiRecallSelf" class="q-switch">
+                  <span class="q-switch__handle"></span>
+                </div>
+              </div>
+
+
             </div>
 
           </div>
@@ -324,6 +336,24 @@ export async function onConfigView(view) {
         q_switch_savedb.classList.toggle("is-active");
         await window.anti_recall.saveConfig(nowConfig);
     });
+
+    //反撤回自己消息开关
+    var q_switch_antiself = node2.querySelector("#switchAntiRecallSelf");
+
+    if (nowConfig.isAntiRecallSelfMsg == true) {
+        q_switch_antiself.classList.toggle("is-active");
+    }
+
+    q_switch_antiself.addEventListener("click", async () => {
+        if (q_switch_antiself.classList.contains("is-active")) {
+            nowConfig.isAntiRecallSelfMsg = false;
+        } else {
+            nowConfig.isAntiRecallSelfMsg = true;
+        }
+        q_switch_antiself.classList.toggle("is-active");
+        await window.anti_recall.saveConfig(nowConfig);
+    });
+
 
     //阴影开关
     var q_switch_shadow = node2.querySelector("#switchShadow");
