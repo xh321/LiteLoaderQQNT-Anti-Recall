@@ -1,7 +1,9 @@
 var recalledMsgList = [];
 
+var nowConfig = {};
+
 export async function onConfigView(view) {
-    var nowConfig = await window.anti_recall.getNowConfig();
+    nowConfig = await window.anti_recall.getNowConfig();
 
     const new_navbar_item = `
     <body>
@@ -394,7 +396,7 @@ export async function onConfigView(view) {
 }
 
 async function patchCss() {
-    var nowConfig = await window.anti_recall.getNowConfig();
+    nowConfig = await window.anti_recall.getNowConfig();
 
     var cssNode = document
         .evaluate("/html/head/style[@id='anti-recall-css']", document)
@@ -490,6 +492,7 @@ export async function onLoad() {
 
     await patchCss();
 
+    var observerRendering = false;
     //监控消息列表，如果有撤回则渲染
     const observer = new MutationObserver(async (mutationsList) => {
         for (let mutation of mutationsList) {
@@ -504,7 +507,12 @@ export async function onLoad() {
                 ) {
                     //是添加的撤回标记，直接忽略
                 } else {
-                    render();
+                    if (observerRendering) continue;
+                    observerRendering = true;
+                    setTimeout(() => {
+                        observerRendering = false;
+                        render();
+                    }, 50);
                 }
             }
         }
@@ -527,53 +535,75 @@ export async function onLoad() {
         }
     }, 100);
 
+    var runningRender = false;
     async function render() {
-        //console.log("[Anti-Recall]", "尝试反撤回消息列表", recalledMsgList);
+        if (runningRender) return;
 
-        for (var msgId of recalledMsgList) {
-            try {
-                var oldElement = document.getElementById(
-                    `${msgId}-msgContainerMsgContent`
-                );
-        
-                var newElement = document.getElementById(`${msgId}-msgContent`);
-        
-                var unixElement = document
-                    .getElementById(`ml-${msgId}`)
-                    ?.querySelector(".msg-content-container");
-        
-                var cardElement = document.getElementById(`${msgId}-msgContent`);
-        
-                var arkElement = document.getElementById(
-                    `ark-msg-content-container_${msgId}`
-                );
-        
-                if (oldElement != null) {
-                    if (oldElement.classList.contains("gray-tip-message")) continue;
-                    await appendRecalledTag(oldElement);
-                } else if (newElement != null) {
-                    if (newElement.classList.contains("gray-tip-message")) continue;
-                    await appendRecalledTag(newElement.parentElement);
-                } else if (unixElement != null) {
-                    if (unixElement.classList.contains("gray-tip-message")) continue;
-                    await appendRecalledTag(unixElement.parentElement);
-                } else if (cardElement != null) {
-                    if (cardElement.classList.contains("gray-tip-message")) continue;
-                    await appendRecalledTag(cardElement.parentElement);
-                } else if (arkElement != null) {
-                    if (arkElement.classList.contains("gray-tip-message")) continue;
-                    await appendRecalledTag(arkElement.parentElement);
+        runningRender = true;
+        // console.log("[Anti-Recall]", "尝试反撤回消息列表", recalledMsgList);
+
+        var elements = document
+            .querySelector(".chat-msg-area__vlist")
+            .querySelectorAll(".ml-item");
+
+        nowConfig = await window.anti_recall.getNowConfig();
+
+        for (var el of elements) {
+            var findMsgId = recalledMsgList.find((i) => i == el.id);
+            if (findMsgId != null) {
+                var msgId = findMsgId;
+                try {
+                    var oldElement = el.querySelector(
+                        `div[id='${msgId}-msgContainerMsgContent']`
+                    );
+
+                    var newElement = el.querySelector(
+                        `div[id='${msgId}-msgContent']`
+                    );
+
+                    var unixElement = el
+                        .querySelector(`div[id='ml-${msgId}']`)
+                        ?.querySelector(".msg-content-container");
+
+                    var cardElement = el.querySelector(
+                        `div[id='${msgId}-msgContent']`
+                    );
+
+                    var arkElement = el.querySelector(
+                        `div[id='ark-msg-content-container_${msgId}']`
+                    );
+
+                    if (oldElement != null) {
+                        if (oldElement.classList.contains("gray-tip-message"))
+                            continue;
+                        await appendRecalledTag(oldElement);
+                    } else if (newElement != null) {
+                        if (newElement.classList.contains("gray-tip-message"))
+                            continue;
+                        await appendRecalledTag(newElement.parentElement);
+                    } else if (unixElement != null) {
+                        if (unixElement.classList.contains("gray-tip-message"))
+                            continue;
+                        await appendRecalledTag(unixElement.parentElement);
+                    } else if (cardElement != null) {
+                        if (cardElement.classList.contains("gray-tip-message"))
+                            continue;
+                        await appendRecalledTag(cardElement.parentElement);
+                    } else if (arkElement != null) {
+                        if (arkElement.classList.contains("gray-tip-message"))
+                            continue;
+                        await appendRecalledTag(arkElement.parentElement);
+                    }
+                } catch (e) {
+                    console.log("[Anti-Recall]", "反撤回消息时出错", e);
                 }
-            } catch (e) {
-                console.log("[Anti-Recall]", "反撤回消息时出错", e);
             }
         }
+        runningRender = false;
     }
 
     async function appendRecalledTag(msgElement) {
         if (!msgElement) return;
-
-        var nowConfig = await window.anti_recall.getNowConfig();
 
         var currRecalledTip = msgElement.querySelector(
             ".message-content-recalled"
