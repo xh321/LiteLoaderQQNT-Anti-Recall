@@ -84,6 +84,8 @@ async function onLoad(plugin) {
         valueEncoding: "json"
     });
 
+    db.open();
+
     ipcMain.handle("LiteLoader.anti_recall.clearDb", async (event, message) => {
         dialog
             .showMessageBox({
@@ -108,20 +110,29 @@ async function onLoad(plugin) {
             });
     });
 
-    loadDb()
-        .catch(async (e) => {
-            output(
-                "Error while loading recalled msgs from db: " + e.toString(),
-                ", retrying..."
-            );
-            await loadDb();
-        })
-        .catch((e) => {
-            output(
-                "Error while loading recalled msgs from db: " + e.toString(),
-                ", stop load."
-            );
-        });
+    setTimeout(async () => {
+        await loadDb()
+            .catch(async (e) => {
+                output(
+                    "Error while loading recalled msgs from db: " +
+                        e.toString(),
+                    ", retrying..."
+                );
+                await loadDb();
+            })
+            .catch((e) => {
+                output(
+                    "Error while loading recalled msgs from db: " +
+                        e.toString(),
+                    ", stop load."
+                );
+            });
+    }, 50);
+
+    app.on("quit", () => {
+        output("Closing db...");
+        db.close();
+    });
 }
 
 async function loadDb() {
