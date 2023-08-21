@@ -108,55 +108,68 @@ async function onLoad(plugin) {
             });
     });
 
-    (async () => {
-        if (nowConfig.saveDb) {
-            output("Loading recalled msgs from db...");
-            var counter = 0;
-            for await (const value of db.values()) {
-                counter++;
-                recalledMsg.push(value);
-                if (value.msg == null) continue;
-                for (item of value.msg.elements) {
-                    if (item.picElement != null) {
-                        item.picElement.thumbPath = new Map([
-                            [
-                                0,
-                                item.picElement.sourcePath
-                                    .replace("Ori", "Thumb")
-                                    .replace(
-                                        item.picElement.md5HexStr,
-                                        item.picElement.md5HexStr + "_0"
-                                    )
-                            ],
-                            [
-                                198,
-                                item.picElement.sourcePath
-                                    .replace("Ori", "Thumb")
-                                    .replace(
-                                        item.picElement.md5HexStr,
-                                        item.picElement.md5HexStr + "_198"
-                                    )
-                            ],
-                            [
-                                720,
-                                item.picElement.sourcePath
-                                    .replace("Ori", "Thumb")
-                                    .replace(
-                                        item.picElement.md5HexStr,
-                                        item.picElement.md5HexStr + "_720"
-                                    )
-                            ]
-                        ]);
-                    }
+    loadDb()
+        .catch(async (e) => {
+            output(
+                "Error while loading recalled msgs from db: " + e.toString(),
+                ", retrying..."
+            );
+            await loadDb();
+        })
+        .catch((e) => {
+            output(
+                "Error while loading recalled msgs from db: " + e.toString(),
+                ", stop load."
+            );
+        });
+}
+
+async function loadDb() {
+    if (nowConfig.saveDb) {
+        output("Loading recalled msgs from db...");
+        var counter = 0;
+        for await (const value of db.values()) {
+            counter++;
+            recalledMsg.push(value);
+            if (value.msg == null) continue;
+            for (item of value.msg.elements) {
+                if (item.picElement != null) {
+                    item.picElement.thumbPath = new Map([
+                        [
+                            0,
+                            item.picElement.sourcePath
+                                .replace("Ori", "Thumb")
+                                .replace(
+                                    item.picElement.md5HexStr,
+                                    item.picElement.md5HexStr + "_0"
+                                )
+                        ],
+                        [
+                            198,
+                            item.picElement.sourcePath
+                                .replace("Ori", "Thumb")
+                                .replace(
+                                    item.picElement.md5HexStr,
+                                    item.picElement.md5HexStr + "_198"
+                                )
+                        ],
+                        [
+                            720,
+                            item.picElement.sourcePath
+                                .replace("Ori", "Thumb")
+                                .replace(
+                                    item.picElement.md5HexStr,
+                                    item.picElement.md5HexStr + "_720"
+                                )
+                        ]
+                    ]);
                 }
             }
-            output(`Loaded ${counter} msgs.`);
-        } else {
-            output("Db saving is disabled, continue.");
         }
-    })().catch((e) => {
-        output("Error while loading recalled msgs from db: " + e.toString());
-    });
+        output(`Loaded ${counter} msgs.`);
+    } else {
+        output("Db saving is disabled, continue.");
+    }
 }
 
 var msgFlow = [];
