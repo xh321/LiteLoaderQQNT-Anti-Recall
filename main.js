@@ -84,7 +84,7 @@ async function onLoad(plugin) {
         valueEncoding: "json"
     });
 
-    db.open();
+     db.open();
 
     ipcMain.handle("LiteLoader.anti_recall.clearDb", async (event, message) => {
         dialog
@@ -118,6 +118,7 @@ async function onLoad(plugin) {
                         e.toString(),
                     ", retrying..."
                 );
+                await db.open();
                 await loadDb();
             })
             .catch((e) => {
@@ -127,11 +128,11 @@ async function onLoad(plugin) {
                     ", stop load."
                 );
             });
-    }, 50);
+    }, 100);
 
-    app.on("quit", () => {
+    app.on("quit", async () => {
         output("Closing db...");
-        db.close();
+        await db.close();
     });
 }
 
