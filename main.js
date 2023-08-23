@@ -84,7 +84,11 @@ async function onLoad(plugin) {
         valueEncoding: "json"
     });
 
-     db.open();
+    
+    (async () => {
+        await db.open();
+    })();
+
 
     ipcMain.handle("LiteLoader.anti_recall.clearDb", async (event, message) => {
         dialog
@@ -110,25 +114,26 @@ async function onLoad(plugin) {
             });
     });
 
-    setTimeout(async () => {
-        await loadDb()
-            .catch(async (e) => {
-                output(
-                    "Error while loading recalled msgs from db: " +
-                        e.toString(),
-                    ", retrying..."
-                );
-                await db.open();
-                await loadDb();
-            })
-            .catch((e) => {
-                output(
-                    "Error while loading recalled msgs from db: " +
-                        e.toString(),
-                    ", stop load."
-                );
-            });
-    }, 100);
+    // 老方法，废弃
+    // setTimeout(async () => {
+    //     await loadDb()
+    //         .catch(async (e) => {
+    //             output(
+    //                 "Error while loading recalled msgs from db: " +
+    //                     e.toString(),
+    //                 ", retrying..."
+    //             );
+    //             await db.open();
+    //             await loadDb();
+    //         })
+    //         .catch((e) => {
+    //             output(
+    //                 "Error while loading recalled msgs from db: " +
+    //                     e.toString(),
+    //                 ", stop load."
+    //             );
+    //         });
+    // }, 100);
 
     app.on("quit", async () => {
         output("Closing db...");
@@ -136,59 +141,60 @@ async function onLoad(plugin) {
     });
 }
 
-async function loadDb() {
-    if (nowConfig.saveDb) {
-        output("Loading recalled msgs from db...");
-        var counter = 0;
-        for await (const value of db.values()) {
-            counter++;
-            recalledMsg.push(value);
-            if (value.msg == null) continue;
-            for (item of value.msg.elements) {
-                if (item.picElement != null) {
-                    item.picElement.thumbPath = new Map([
-                        [
-                            0,
-                            item.picElement.sourcePath
-                                .replace("Ori", "Thumb")
-                                .replace(
-                                    item.picElement.md5HexStr,
-                                    item.picElement.md5HexStr + "_0"
-                                )
-                        ],
-                        [
-                            198,
-                            item.picElement.sourcePath
-                                .replace("Ori", "Thumb")
-                                .replace(
-                                    item.picElement.md5HexStr,
-                                    item.picElement.md5HexStr + "_198"
-                                )
-                        ],
-                        [
-                            720,
-                            item.picElement.sourcePath
-                                .replace("Ori", "Thumb")
-                                .replace(
-                                    item.picElement.md5HexStr,
-                                    item.picElement.md5HexStr + "_720"
-                                )
-                        ]
-                    ]);
-                }
-            }
-        }
-        output(`Loaded ${counter} msgs.`);
-    } else {
-        output("Db saving is disabled, continue.");
-    }
-}
+// 废弃
+// async function loadDb() {
+//     if (nowConfig.saveDb) {
+//         output("Loading recalled msgs from db...");
+//         var counter = 0;
+//         for await (const value of db.values()) {
+//             counter++;
+//             recalledMsg.push(value);
+//             if (value.msg == null) continue;
+//             for (item of value.msg.elements) {
+//                 if (item.picElement != null) {
+//                     item.picElement.thumbPath = new Map([
+//                         [
+//                             0,
+//                             item.picElement.sourcePath
+//                                 .replace("Ori", "Thumb")
+//                                 .replace(
+//                                     item.picElement.md5HexStr,
+//                                     item.picElement.md5HexStr + "_0"
+//                                 )
+//                         ],
+//                         [
+//                             198,
+//                             item.picElement.sourcePath
+//                                 .replace("Ori", "Thumb")
+//                                 .replace(
+//                                     item.picElement.md5HexStr,
+//                                     item.picElement.md5HexStr + "_198"
+//                                 )
+//                         ],
+//                         [
+//                             720,
+//                             item.picElement.sourcePath
+//                                 .replace("Ori", "Thumb")
+//                                 .replace(
+//                                     item.picElement.md5HexStr,
+//                                     item.picElement.md5HexStr + "_720"
+//                                 )
+//                         ]
+//                     ]);
+//                 }
+//             }
+//         }
+//         output(`Loaded ${counter} msgs.`);
+//     } else {
+//         output("Db saving is disabled, continue.");
+//     }
+// }
 
 var msgFlow = [];
 var recalledMsg = [];
 
-const MAX_MSG_SAVED_LIMIT = 1000;
-const DELETE_MSG_COUNT_PER_TIME = 50;
+const MAX_MSG_SAVED_LIMIT = 10000;
+const DELETE_MSG_COUNT_PER_TIME = 500;
 
 function request(url) {
     return new Promise((resolve, reject) => {
@@ -323,7 +329,7 @@ function onBrowserWindowCreated(window) {
                 window.webContents.send;
 
             //var myUid = "";
-            const patched_send = function (channel, ...args) {
+            const patched_send = async function (channel, ...args) {
                 //output(channel, JSON.stringify(args));
                 // if (db != null) {
                 //     db.put("a", { x: 123 }, function (err) {
@@ -379,7 +385,7 @@ function onBrowserWindowCreated(window) {
 
                             needUpdateIdx.sort((a, b) => b - a);
 
-                            needUpdateIdx.forEach((i) => {
+                            for (var i of needUpdateIdx) {
                                 var currMsgId = args[1].msgList[i].msgId;
 
                                 //如果之前存了消息
@@ -390,7 +396,7 @@ function onBrowserWindowCreated(window) {
                                     (i) => i.id == currMsgId
                                 );
 
-                                //var dbMsg = getMsgById(currMsgId);
+                                var dbMsg = await getMsgById(currMsgId);
 
                                 //优先从已保存的撤回的消息中获取
                                 if (olderMsgFromRecalledMsg != null) {
@@ -438,22 +444,21 @@ function onBrowserWindowCreated(window) {
                                     output(
                                         "Detected recall, intercepted and recovered from msgFlow"
                                     );
+                                } else if (dbMsg != null) {
+                                    args[1].msgList[i] = dbMsg.msg;
+
+                                    //没专门存过这条消息到专门的反撤回数组中，就存一下
+                                    if (olderMsgFromRecalledMsg == null) {
+                                        recalledMsg.push(dbMsg);
+                                    }
+
+                                    downloadPic(dbMsg.msg);
+
+                                    output(
+                                        "Detected recall, intercepted and recovered from dbMsg"
+                                    );
                                 }
-                                // else if (dbMsg != null) {
-                                //     args[1].msgList[i] = dbMsg.msg;
-
-                                //     //没专门存过这条消息到专门的反撤回数组中，就存一下
-                                //     if (olderMsgFromRecalledMsg == null) {
-                                //         recalledMsg.push(dbMsg);
-                                //     }
-
-                                //     downloadPic(dbMsg.msg);
-
-                                //     output(
-                                //         "Detected recall, intercepted and recovered from dbMsg"
-                                //     );
-                                // }
-                            });
+                            }
 
                             window.webContents.send(
                                 "LiteLoader.anti_recall.mainWindow.recallTipList",
