@@ -84,11 +84,9 @@ async function onLoad(plugin) {
         valueEncoding: "json"
     });
 
-    
     (async () => {
         await db.open();
     })();
-
 
     ipcMain.handle("LiteLoader.anti_recall.clearDb", async (event, message) => {
         dialog
@@ -460,7 +458,8 @@ function onBrowserWindowCreated(window) {
                                 }
                             }
 
-                            window.webContents.send(
+                            original_send.call(
+                                window.webContents,
                                 "LiteLoader.anti_recall.mainWindow.recallTipList",
                                 recalledMsg
                                     .filter(
@@ -514,7 +513,8 @@ function onBrowserWindowCreated(window) {
                                             !msgList.elements[0].grayTipElement
                                                 .revokeElement.isSelfOperate)
                                     ) {
-                                        window.webContents.send(
+                                        original_send.call(
+                                            window.webContents,
                                             "LiteLoader.anti_recall.mainWindow.recallTip",
                                             msgList.msgId
                                         );
