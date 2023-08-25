@@ -535,11 +535,7 @@ export async function onLoad() {
         }
     }, 100);
 
-    var runningRender = false;
     async function render() {
-        if (runningRender) return;
-
-        runningRender = true;
         // console.log("[Anti-Recall]", "尝试反撤回消息列表", recalledMsgList);
 
         var elements = document
@@ -599,7 +595,6 @@ export async function onLoad() {
                 }
             }
         }
-        runningRender = false;
     }
 
     async function appendRecalledTag(msgElement) {
