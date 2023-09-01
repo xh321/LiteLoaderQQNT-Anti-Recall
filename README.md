@@ -5,7 +5,9 @@ LiteLoaderQQNT插件，用于比较完善的防撤回。
 
 ## 使用方法
 
-建议前往release中下载压缩包，保留文件夹结构（文件夹名称为`插件名`，内容为github上的内容），将文件夹移动至`LiteLoaderQQNT数据目录/plugins/`下面，重启QQNT即可。
+建议直接前往LLQQNT应用商店安装本插件。
+
+你也可以前往release中下载压缩包，保留文件夹结构（文件夹名称为`插件名`，内容为github上的内容），将文件夹移动至`LiteLoaderQQNT数据目录/plugins/`下面，重启QQNT即可。
 
 直接克隆源码的话，需要手动进行`npm install`。
 
