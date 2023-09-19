@@ -328,7 +328,7 @@ function onBrowserWindowCreated(window) {
 
             //var myUid = "";
             const patched_send = async function (channel, ...args) {
-                //output(channel, JSON.stringify(args));
+                // output(channel, JSON.stringify(args));
                 // if (db != null) {
                 //     db.put("a", { x: 123 }, function (err) {
                 //         if (err) throw err;

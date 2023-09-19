@@ -419,6 +419,9 @@ async function patchCss() {
                     box-shadow: 0px 0px 20px 5px ${nowConfig.mainColor};`;
     }
     sHtml += `                }
+            .recalledNoMargin {
+                margin-top: 0px!important;
+            }
             .message-content-recalled {
                 position: absolute;
                 top: calc(100% + 6px);
@@ -478,9 +481,11 @@ export async function onLoad() {
             await appendRecalledTag(unixElement.parentElement);
         } else if (cardElement != null) {
             if (cardElement.classList.contains("gray-tip-message")) return;
+            cardElement.classList.add("recalledNoMargin");
             await appendRecalledTag(cardElement.parentElement);
         } else if (arkElement != null) {
             if (arkElement.classList.contains("gray-tip-message")) return;
+            arkElement.classList.add("recalledNoMargin");
             await appendRecalledTag(arkElement.parentElement);
         }
     });
@@ -584,10 +589,12 @@ export async function onLoad() {
                     } else if (cardElement != null) {
                         if (cardElement.classList.contains("gray-tip-message"))
                             continue;
+                        cardElement.classList.add("recalledNoMargin");
                         await appendRecalledTag(cardElement.parentElement);
                     } else if (arkElement != null) {
                         if (arkElement.classList.contains("gray-tip-message"))
                             continue;
+                        arkElement.classList.add("recalledNoMargin");
                         await appendRecalledTag(arkElement.parentElement);
                     }
                 } catch (e) {
