@@ -416,12 +416,14 @@ async function patchCss() {
         sHtml += `  margin-top:3px;
                     margin-left:3px;
                     margin-right:3px;
+                    margin-bottom: 30px;
                     box-shadow: 0px 0px 20px 5px ${nowConfig.mainColor};`;
     }
     sHtml += `                }
             .recalledNoMargin {
                 margin-top: 0px!important;
             }
+
             .message-content-recalled {
                 position: absolute;
                 top: calc(100% + 6px);
@@ -431,7 +433,8 @@ async function patchCss() {
                 left: 0;
                 background-color: var(--background-color-05);
                 backdrop-filter: blur(28px);
-                padding: 2px 8px;
+                padding: 4px 8px;
+                margin-bottom: 2px;
                 border-radius: 6px;
                 box-shadow: var(--box-shadow);
                 transition: 300ms;
