@@ -495,79 +495,90 @@ function onBrowserWindowCreated(window) {
                                 args1.cmdName.indexOf("onMsgInfoListUpdate") !=
                                     -1 &&
                                 args1.payload != null &&
-                                args1.payload.msgList instanceof Array
+                                args1.payload.msgList instanceof Array &&
+                                args1.payload.msgList[0].msgType == 5 &&
+                                args1.payload.msgList[0].subMsgType == 4
                             ) {
                                 var msgList = args1.payload.msgList[0];
 
+                                //不是自己撤回的，才拦截
                                 if (
-                                    msgList.msgType == 5 &&
-                                    msgList.subMsgType == 4
+                                    msgList.elements[0].grayTipElement !=
+                                        null &&
+                                    msgList.elements[0].grayTipElement
+                                        .revokeElement != null &&
+                                    (nowConfig.isAntiRecallSelfMsg ||
+                                        !msgList.elements[0].grayTipElement
+                                            .revokeElement.isSelfOperate)
                                 ) {
-                                    //不是自己撤回的，才拦截
-                                    if (
-                                        msgList.elements[0].grayTipElement !=
-                                            null &&
-                                        msgList.elements[0].grayTipElement
-                                            .revokeElement != null &&
-                                        (nowConfig.isAntiRecallSelfMsg ||
-                                            !msgList.elements[0].grayTipElement
-                                                .revokeElement.isSelfOperate)
-                                    ) {
-                                        original_send.call(
-                                            window.webContents,
-                                            "LiteLoader.anti_recall.mainWindow.recallTip",
-                                            msgList.msgId
-                                        );
+                                    original_send.call(
+                                        window.webContents,
+                                        "LiteLoader.anti_recall.mainWindow.recallTip",
+                                        msgList.msgId
+                                    );
 
-                                        //如果之前存了消息
-                                        var olderMsg = msgFlow.find(
+                                    //如果之前存了消息
+                                    var olderMsg = msgFlow.find(
+                                        (i) => i.id == msgList.msgId
+                                    );
+                                    var olderMsgFromRecalledMsg =
+                                        recalledMsg.find(
                                             (i) => i.id == msgList.msgId
                                         );
-                                        var olderMsgFromRecalledMsg =
-                                            recalledMsg.find(
-                                                (i) => i.id == msgList.msgId
-                                            );
 
-                                        //之前存了消息，但是还没有存入专门的反撤回数组中
-                                        if (
-                                            olderMsg != null &&
-                                            olderMsgFromRecalledMsg == null
-                                        ) {
-                                            recalledMsg.push(olderMsg);
-                                            if (nowConfig.saveDb) {
-                                                insertDb(olderMsg);
-                                            }
+                                    //之前存了消息，但是还没有存入专门的反撤回数组中
+                                    if (
+                                        olderMsg != null &&
+                                        olderMsgFromRecalledMsg == null
+                                    ) {
+                                        recalledMsg.push(olderMsg);
+                                        if (nowConfig.saveDb) {
+                                            insertDb(olderMsg);
                                         }
-
-                                        downloadPic(olderMsg?.msg);
-                                        downloadPic(
-                                            olderMsgFromRecalledMsg?.msg
-                                        );
-
-                                        args[1][0].cmdName = "none";
-                                        args[1][0].payload.msgList.pop();
-
-                                        // console.log(args1.payload);
-                                        output("Detected recall, intercepted");
                                     }
+
+                                    downloadPic(olderMsg?.msg);
+                                    downloadPic(
+                                        olderMsgFromRecalledMsg?.msg
+                                    );
+
+                                    args[1][0].cmdName = "none";
+                                    args[1][0].payload.msgList.pop();
+
+                                    // console.log(args1.payload);
+                                    output("Detected recall, intercepted");
                                 }
                             }
                             //接到消息
                             else if (
                                 args1.cmdName != null &&
-                                args1.cmdName.indexOf("onRecvMsg") != -1 &&
                                 args1.payload != null &&
-                                args1.payload.msgList instanceof Array
+                                (args1.cmdName.indexOf("onRecvMsg") != -1 &&
+                                    args1.payload.msgList instanceof Array) ||
+                                (args1.cmdName.indexOf("onAddSendMsg") != -1 &&
+                                    args1.payload.msgRecord != null) ||
+                                (args1.cmdName.indexOf("onMsgInfoListUpdate") != -1 &&
+                                    args1.payload.msgList instanceof Array)
                             ) {
-                                var msgList = args1.payload.msgList;
+                                var msgList = args1.payload.msgList instanceof Array ?
+                                                args1.payload.msgList : [args1.payload.msgRecord];
 
                                 for (msg of msgList) {
                                     var msgId = msg.msgId;
-                                    msgFlow.push({
+
+                                    var olderMsgIdx = msgFlow.findIndex(
+                                        (i) => i.id == msgId
+                                    );
+                                    if (olderMsgIdx == -1) {
+                                        msgFlow.push({});
+                                        olderMsgIdx = msgFlow.length - 1;
+                                    }
+                                    msgFlow[olderMsgIdx] = {
                                         id: msgId,
                                         sender: msg.peerUid,
                                         msg: msg
-                                    });
+                                    };
+
                                     if (msgFlow.length > MAX_MSG_SAVED_LIMIT) {
                                         msgFlow.splice(
                                             0,
