@@ -212,50 +212,116 @@ function request(url) {
     });
 }
 
-async function downloadPic(msgList) {
-    if (msgList == null) return;
-
-    for (item of msgList.elements) {
-        if (item.picElement) {
-            var pic = item.picElement;
-            var picBasePath = pic.md5HexStr.toUpperCase();
-            var urlBase = `https://gchat.qpic.cn/gchatpic_new/0/0-0-${picBasePath}/`;
-
+// 下载被撤回的图片（抄自Lite-Tools）
+async function processPic(msgItem) {
+    msgItem?.elements?.forEach(async (el) => {
+        if (el?.picElement) {
+            const pic = el.picElement;
+            const picName = pic.md5HexStr.toUpperCase();
+            const picUrl = `https://gchat.qpic.cn/gchatpic_new/0/0-0-${picName}/`;
             output(
-                `[${pic.md5HexStr
-                    .toUpperCase()
-                    .substring(0, 5)}]Downloading lost pic(s)... ${urlBase}`
+                "Download lost pic(s)... url=",
+                picUrl,
+                "msgId=",
+                msgItem.msgId
             );
-
             if (!fs.existsSync(pic.sourcePath)) {
-                const body = await request(`${urlBase}0`);
+                output("Download pic:", `${picUrl}0`);
+                const body = await request(`${picUrl}0`);
                 fs.mkdirSync(path.dirname(pic.sourcePath), { recursive: true });
                 fs.writeFileSync(pic.sourcePath, body);
             } else {
-                output(
-                    `[${pic.md5HexStr
-                        .toUpperCase()
-                        .substring(0, 5)}]Pic(s) already existed, skip.`
-                );
+                output("Pic already existed, skip.", pic.sourcePath);
             }
-
-            if (pic.thumbPath instanceof Array) {
-                pic.thumbPath.forEach(async (value, key) => {
-                    if (!fs.existsSync(value)) {
-                        const body = await request(`${urlBase}${key}`);
-                        fs.mkdirSync(path.dirname(value), { recursive: true });
-                        fs.writeFileSync(value, body);
+            // 修复本地数据中的错误
+            if (
+                pic?.thumbPath &&
+                (pic.thumbPath instanceof Array ||
+                    pic.thumbPath instanceof Object)
+            ) {
+                pic.thumbPath = new Map([
+                    [
+                        0,
+                        pic.sourcePath
+                            .replace("Ori", "Thumb")
+                            .replace(pic.md5HexStr, pic.md5HexStr + "_0")
+                    ],
+                    [
+                        198,
+                        pic.sourcePath
+                            .replace("Ori", "Thumb")
+                            .replace(pic.md5HexStr, pic.md5HexStr + "_198")
+                    ],
+                    [
+                        720,
+                        pic.sourcePath
+                            .replace("Ori", "Thumb")
+                            .replace(pic.md5HexStr, pic.md5HexStr + "_720")
+                    ]
+                ]);
+            }
+            if (
+                pic?.thumbPath &&
+                (pic.thumbPath instanceof Array || pic.thumbPath instanceof Map)
+            ) {
+                pic.thumbPath.forEach(async (el, key) => {
+                    if (!fs.existsSync(el)) {
+                        output("Download thumbs:", `${picUrl}${key}`);
+                        const body = await request(`${picUrl}${key}`);
+                        fs.mkdirSync(path.dirname(el), { recursive: true });
+                        fs.writeFileSync(el, body);
                     }
                 });
             }
-            output(
-                `[${pic.md5HexStr
-                    .toUpperCase()
-                    .substring(0, 5)}]Download completed!`
-            );
         }
-    }
+    });
 }
+
+//废弃（老方法）
+// async function downloadPic(msgList) {
+//     if (msgList == null) return;
+
+//     for (item of msgList.elements) {
+//         if (item.picElement) {
+//             var pic = item.picElement;
+//             var picBasePath = pic.md5HexStr.toUpperCase();
+//             var urlBase = `https://gchat.qpic.cn/gchatpic_new/0/0-0-${picBasePath}/`;
+
+//             output(
+//                 `[${pic.md5HexStr
+//                     .toUpperCase()
+//                     .substring(0, 5)}]Downloading lost pic(s)... ${urlBase}`
+//             );
+
+//             if (!fs.existsSync(pic.sourcePath)) {
+//                 const body = await request(`${urlBase}0`);
+//                 fs.mkdirSync(path.dirname(pic.sourcePath), { recursive: true });
+//                 fs.writeFileSync(pic.sourcePath, body);
+//             } else {
+//                 output(
+//                     `[${pic.md5HexStr.toUpperCase().substring(0, 5)}] ${
+//                         pic.sourcePath
+//                     } Pic(s) already existed, skip.`
+//                 );
+//             }
+
+//             if (pic.thumbPath instanceof Array) {
+//                 pic.thumbPath.forEach(async (value, key) => {
+//                     if (!fs.existsSync(value)) {
+//                         const body = await request(`${urlBase}${key}`);
+//                         fs.mkdirSync(path.dirname(value), { recursive: true });
+//                         fs.writeFileSync(value, body);
+//                     }
+//                 });
+//             }
+//             output(
+//                 `[${pic.md5HexStr
+//                     .toUpperCase()
+//                     .substring(0, 5)}]Download completed!`
+//             );
+//         }
+//     }
+// }
 
 function insertDb(msg) {
     if (db != null) {
@@ -419,7 +485,9 @@ function onBrowserWindowCreated(window) {
                                     //     ]
                                     // );
 
-                                    downloadPic(olderMsgFromRecalledMsg.msg);
+                                    await processPic(
+                                        olderMsgFromRecalledMsg.msg
+                                    );
 
                                     args[1].msgList[i] =
                                         olderMsgFromRecalledMsg.msg;
@@ -437,7 +505,7 @@ function onBrowserWindowCreated(window) {
                                         recalledMsg.push(olderMsg);
                                     }
 
-                                    downloadPic(olderMsg.msg);
+                                    await processPic(olderMsg.msg);
 
                                     output(
                                         "Detected recall, intercepted and recovered from msgFlow"
@@ -450,14 +518,14 @@ function onBrowserWindowCreated(window) {
                                         recalledMsg.push(dbMsg);
                                     }
 
-                                    downloadPic(dbMsg.msg);
+                                    await processPic(dbMsg.msg);
 
                                     output(
                                         "Detected recall, intercepted and recovered from dbMsg"
                                     );
                                 }
+                                args[1].msgList[i].isOnlineMsg = true;
                             }
-
                             original_send.call(
                                 window.webContents,
                                 "LiteLoader.anti_recall.mainWindow.recallTipList",
@@ -538,9 +606,7 @@ function onBrowserWindowCreated(window) {
                                     }
 
                                     downloadPic(olderMsg?.msg);
-                                    downloadPic(
-                                        olderMsgFromRecalledMsg?.msg
-                                    );
+                                    downloadPic(olderMsgFromRecalledMsg?.msg);
 
                                     args[1][0].cmdName = "none";
                                     args[1][0].payload.msgList.pop();
@@ -551,17 +617,20 @@ function onBrowserWindowCreated(window) {
                             }
                             //接到消息
                             else if (
-                                args1.cmdName != null &&
-                                args1.payload != null &&
-                                (args1.cmdName.indexOf("onRecvMsg") != -1 &&
+                                (args1.cmdName != null &&
+                                    args1.payload != null &&
+                                    args1.cmdName.indexOf("onRecvMsg") != -1 &&
                                     args1.payload.msgList instanceof Array) ||
                                 (args1.cmdName.indexOf("onAddSendMsg") != -1 &&
                                     args1.payload.msgRecord != null) ||
-                                (args1.cmdName.indexOf("onMsgInfoListUpdate") != -1 &&
+                                (args1.cmdName.indexOf("onMsgInfoListUpdate") !=
+                                    -1 &&
                                     args1.payload.msgList instanceof Array)
                             ) {
-                                var msgList = args1.payload.msgList instanceof Array ?
-                                                args1.payload.msgList : [args1.payload.msgRecord];
+                                var msgList =
+                                    args1.payload.msgList instanceof Array
+                                        ? args1.payload.msgList
+                                        : [args1.payload.msgRecord];
 
                                 for (msg of msgList) {
                                     var msgId = msg.msgId;
@@ -578,7 +647,6 @@ function onBrowserWindowCreated(window) {
                                         sender: msg.peerUid,
                                         msg: msg
                                     };
-
                                     if (msgFlow.length > MAX_MSG_SAVED_LIMIT) {
                                         msgFlow.splice(
                                             0,
