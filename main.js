@@ -605,8 +605,8 @@ function onBrowserWindowCreated(window) {
                                         }
                                     }
 
-                                    downloadPic(olderMsg?.msg);
-                                    downloadPic(olderMsgFromRecalledMsg?.msg);
+                                    await processPic(olderMsg?.msg);
+                                    await processPic(olderMsgFromRecalledMsg?.msg);
 
                                     args[1][0].cmdName = "none";
                                     args[1][0].payload.msgList.pop();
