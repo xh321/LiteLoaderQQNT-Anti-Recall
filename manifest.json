@@ -1,21 +1,23 @@
 {
-    "manifest_version": 3,
+    "manifest_version": 4,
     "type": "extension",
     "name": "防撤回",
     "slug": "anti_recall",
     "description": "防止QQNT撤回消息",
-    "version": "0.2.28",
-    "thumbnail": "./icon.png",
-    "author": {
-        "name": "XiaoHe321",
-        "link": "https://github.com/xh321"
-    },
+    "version": "0.2.29",
+    "icon": "./icon.png",
+    "authors": [
+        {
+            "name": "XiaoHe321",
+            "link": "https://github.com/xh321"
+        }
+    ],
     "repository": {
         "repo": "xh321/LiteLoaderQQNT-Anti-Recall",
         "branch": "master",
-        "use_release": {
-            "tag": "latest",
-            "name": "qq-anti-recall.zip"
+        "release": {
+            "tag": "0.2.29",
+            "file": "qq-anti-recall.zip"
         }
     },
     "platform": ["win32", "darwin", "linux"],

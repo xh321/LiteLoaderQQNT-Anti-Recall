@@ -2,7 +2,7 @@ var recalledMsgList = [];
 
 var nowConfig = {};
 
-export async function onConfigView(view) {
+export async function onSettingWindowCreated(view) {
     nowConfig = await window.anti_recall.getNowConfig();
 
     const new_navbar_item = `
@@ -448,7 +448,9 @@ async function patchCss() {
     document.getElementsByTagName("head").item(0).appendChild(stylee);
 }
 
-export async function onLoad() {
+onLoad();
+
+async function onLoad() {
     anti_recall.repatchCss(async (event, _) => {
         await patchCss();
     });

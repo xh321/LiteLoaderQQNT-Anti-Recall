@@ -5,7 +5,13 @@ LiteLoaderQQNT插件，用于比较完善的防撤回。
 
 ## 使用方法
 
-建议直接前往LLQQNT应用商店安装本插件。
+*建议从`LiteLoaderQQNT`应用商店中直接下载安装，方便快捷。*（新版本1.0`LiteLoaderQQNT`没有插件商店了，请遵循[手动安装方法](https://liteloaderqqnt.github.io/guide/plugins.html)）
+
+**版本不兼容提示**：从0.2.29起，插件已适配1.0版本以上`LiteLoaderQQNT`框架，同时不再兼容旧版框架，请遵循[安装方法](https://liteloaderqqnt.github.io/guide/install.html)更新框架。
+
+注意：如果你是从旧版更新到新版（1.0）框架后，需要把`LiteLoaderQQNT`数据目录中的plugins_data文件夹重命名为data，否则之前的记录和配置文件会丢失。（如果仍然丢失就没办法了）
+
+
 
 你也可以前往release中下载压缩包，保留文件夹结构（文件夹名称为`插件名`，内容为github上的内容），将文件夹移动至`LiteLoaderQQNT数据目录/plugins/`下面，重启QQNT即可。
 

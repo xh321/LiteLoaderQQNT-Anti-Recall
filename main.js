@@ -36,11 +36,13 @@ function loadConfig() {
     }
 }
 
-async function onLoad(plugin) {
-    if (!fs.existsSync(plugin.path.data)) {
-        fs.mkdirSync(plugin.path.data, { recursive: true });
+onLoad();
+
+async function onLoad() {
+    if (!fs.existsSync(LiteLoader.path.data)) {
+        fs.mkdirSync(LiteLoader.path.data, { recursive: true });
     }
-    configFilePath = path.join(plugin.path.data, "config.json");
+    configFilePath = path.join(LiteLoader.path.data, "config.json");
     nowConfig = loadConfig();
 
     if (nowConfig.mainColor == null) {
@@ -80,7 +82,7 @@ async function onLoad(plugin) {
         }
     );
 
-    db = new Level(path.join(plugin.path.data, "qq-recalled-db"), {
+    db = new Level(path.join(LiteLoader.path.data, "qq-recalled-db"), {
         valueEncoding: "json"
     });
 
@@ -606,7 +608,9 @@ function onBrowserWindowCreated(window) {
                                     }
 
                                     await processPic(olderMsg?.msg);
-                                    await processPic(olderMsgFromRecalledMsg?.msg);
+                                    await processPic(
+                                        olderMsgFromRecalledMsg?.msg
+                                    );
 
                                     args[1][0].cmdName = "none";
                                     args[1][0].payload.msgList.pop();
@@ -684,6 +688,5 @@ function output(...args) {
 }
 
 module.exports = {
-    onLoad,
     onBrowserWindowCreated
 };
