@@ -550,7 +550,7 @@ async function onLoad() {
 
         var elements = document
             .querySelector(".chat-msg-area__vlist")
-            .querySelectorAll(".ml-item");
+            ?.querySelectorAll(".ml-item");
 
         nowConfig = await window.anti_recall.getNowConfig();
 
