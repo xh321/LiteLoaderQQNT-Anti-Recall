@@ -86,9 +86,12 @@ async function onLoad() {
         valueEncoding: "json"
     });
 
-    (async () => {
-        await db.open();
-    })();
+    db.open((e) =>
+        output(
+            "打开数据库失败，可能是QQ进程未完全退出。请查看下面详细错误信息中的cause部分：",
+            e
+        )
+    );
 
     ipcMain.handle("LiteLoader.anti_recall.clearDb", async (event, message) => {
         dialog
@@ -343,9 +346,12 @@ async function getMsgById(id) {
     if (db != null) {
         try {
             return await db.get(id);
-        } catch {
+        } catch (e) {
+            output(e);
             return null;
         }
+    } else {
+        output("Warning: Db is null, no previous msg available.");
     }
     return null;
 }

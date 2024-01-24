@@ -17,6 +17,24 @@ LiteLoaderQQNT插件，用于比较完善的防撤回。
 
 直接克隆源码的话，记得需要手动进行`npm install`。
 
+
+
+## 重启QQ反撤回失效？
+
+请使用命令行运行QQ，并观察日志输出。
+
+如果出现：数据库打开失败的提示，并且下面的cause类似于
+
+```
+cause: [Error: IO error: LockFile <LiteLoaderQQNT数据目录>\data\qq-recalled-db/LOCK...]
+```
+
+可能是你之前的QQ退出不完全，或者你开了两个QQ。
+
+请完全关闭QQ进程，并重试。若还不行，可能是数据库文件损坏，考虑清空上面的路径（<LiteLoaderQQNT数据目录>\data\qq-recalled-db）中的LOCK文件，若还不行，清空所有文件（会导致之前反撤回内容丢失）。
+
+
+
 ## 太长不看版
 
 在NTQQ打开期间无论怎样操作，**反撤回均能生效**。
