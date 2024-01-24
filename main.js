@@ -347,7 +347,9 @@ async function getMsgById(id) {
         try {
             return await db.get(id);
         } catch (e) {
-            output(e);
+            if (e.status != 404) {
+                output(e);
+            }
             return null;
         }
     } else {
