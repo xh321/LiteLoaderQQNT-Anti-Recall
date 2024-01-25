@@ -371,7 +371,7 @@ function onBrowserWindowCreated(window) {
         //只针对主界面和独立聊天界面生效
         if (
             window.webContents.getURL().indexOf("#/main/message") != -1 ||
-            window.webContents.getURL().indexOf("#/chat/") != -1
+            window.webContents.getURL().indexOf("#/chat") != -1
         ) {
             mainWindowObjs.push(window);
             // const proxyEvents = new Proxy(
