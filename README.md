@@ -10,6 +10,7 @@ LiteLoaderQQNT插件，用于比较完善的防撤回。
 **手动安装**：请前往[版本发布页面](https://github.com/xh321/LiteLoaderQQNT-Anti-Recall/releases)下载最新版压缩包（`qq-anti-recall.zip`），在`LiteLoaderQQNT数据目录/plugins/`下面新建文件夹（名称任意，建议为插件名称），蒋插件压缩包里的内容解压进去，重启QQNT即可。
 
 **版本不兼容提示**：从0.2.29起，插件已适配1.0版本以上`LiteLoaderQQNT`框架，同时不再兼容旧版框架，请遵循[安装方法](https://liteloaderqqnt.github.io/guide/install.html)更新框架。
+
 **版本提示**：从0.2.35起，自旧版本升级上来的用户会丢失配置和已撤回数据库，需要手动迁移，这是因为之前的数据目录写入错误。迁移过程：把`LiteLoaderQQNT数据目录/qq-recalled-db`文件夹移动到`LiteLoaderQQNT数据目录/anti_recall`文件夹内即可（最终路径：`LiteLoaderQQNT数据目录/anti_recall/qq-recalled-db`。配置文件不建议迁移，可能已经被其他配置文件覆盖，建议重新配置插件（一共也没几个配置项目）。
 
 注意：如果你是从旧版更新到新版（1.0）框架后，需要把`LiteLoaderQQNT`数据目录中的plugins_data文件夹重命名为data，否则之前的记录和配置文件会丢失。（如果仍然丢失就没办法了）
