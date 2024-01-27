@@ -5,7 +5,7 @@ const path = require("path");
 const { app, ipcMain, dialog } = require("electron");
 
 var configFilePath = "";
-var pluginDataDir = path.join(LiteLoader.path.data, "anti-recall");
+var pluginDataDir = path.join(LiteLoader.path.data, "anti_recall");
 
 const { Level } = require("level");
 var db = null;
