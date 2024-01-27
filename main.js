@@ -5,6 +5,7 @@ const path = require("path");
 const { app, ipcMain, dialog } = require("electron");
 
 var configFilePath = "";
+var pluginDataDir = path.join(LiteLoader.path.data, "anti-recall");
 
 const { Level } = require("level");
 var db = null;
@@ -39,10 +40,10 @@ function loadConfig() {
 onLoad();
 
 async function onLoad() {
-    if (!fs.existsSync(LiteLoader.path.data)) {
-        fs.mkdirSync(LiteLoader.path.data, { recursive: true });
+    if (!fs.existsSync(pluginDataDir)) {
+        fs.mkdirSync(pluginDataDir, { recursive: true });
     }
-    configFilePath = path.join(LiteLoader.path.data, "config.json");
+    configFilePath = path.join(pluginDataDir, "config.json");
     nowConfig = loadConfig();
 
     if (nowConfig.mainColor == null) {
@@ -82,7 +83,7 @@ async function onLoad() {
         }
     );
 
-    db = new Level(path.join(LiteLoader.path.data, "qq-recalled-db"), {
+    db = new Level(path.join(pluginDataDir, "qq-recalled-db"), {
         valueEncoding: "json"
     });
 
