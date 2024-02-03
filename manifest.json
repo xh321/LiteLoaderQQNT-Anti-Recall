@@ -16,7 +16,7 @@
         "repo": "xh321/LiteLoaderQQNT-Anti-Recall",
         "branch": "master",
         "release": {
-            "tag": "latest",
+            "tag": "0.2.35",
             "file": "qq-anti-recall.zip"
         }
     },
