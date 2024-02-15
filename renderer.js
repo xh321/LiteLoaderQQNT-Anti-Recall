@@ -410,7 +410,6 @@ async function patchCss() {
     var sHtml = `.message-content-recalled-parent {
                     border-radius: 10px;
                     position: relative;
-                    ${nowConfig.enableTip == true ? "margin-bottom: 15px;" : ""}
                     overflow: unset !important;`;
     if (nowConfig.enableShadow == true) {
         sHtml += `  margin-top:3px;
@@ -426,7 +425,7 @@ async function patchCss() {
 
             .message-content-recalled {
                 position: absolute;
-                top: calc(100% + 6px);
+                top: calc(100% + 8px);
                 font-size: 12px;
                 white-space: nowrap;
                 color: var(--text-color);
@@ -480,7 +479,7 @@ async function onLoad() {
             await appendRecalledTag(oldElement);
         } else if (newElement != null) {
             if (newElement.classList.contains("gray-tip-message")) return;
-            await appendRecalledTag(newElement.parentElement);
+            await appendRecalledTag(newElement);
         } else if (unixElement != null) {
             if (unixElement.classList.contains("gray-tip-message")) return;
             await appendRecalledTag(unixElement.parentElement);
@@ -586,7 +585,7 @@ async function onLoad() {
                     } else if (newElement != null) {
                         if (newElement.classList.contains("gray-tip-message"))
                             continue;
-                        await appendRecalledTag(newElement.parentElement);
+                        await appendRecalledTag(newElement);
                     } else if (unixElement != null) {
                         if (unixElement.classList.contains("gray-tip-message"))
                             continue;
