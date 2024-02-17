@@ -3,9 +3,9 @@ var recalledMsgList = [];
 var nowConfig = {};
 
 export async function onSettingWindowCreated(view) {
-    nowConfig = await window.anti_recall.getNowConfig();
+  nowConfig = await window.anti_recall.getNowConfig();
 
-    const new_navbar_item = `
+  const new_navbar_item = `
     <body>
       <div class="config_view">
         <section class="path">
@@ -40,6 +40,36 @@ export async function onSettingWindowCreated(view) {
                   <span class="q-switch__handle"></span>
                 </div>
               </div>
+
+              <hr class="horizontal-dividing-line" />
+
+              <div class="vertical-list-item">
+              <div>
+                <h2>内存中消息最多缓存条数</h2>
+                <span class="secondary-text">修改将自动保存并立即生效；如果过少可能导致消息接受太快时来不及反撤回，如果过多可能导致内存占用过高。</span>
+              </div>
+              <div style="width:30%;pointer-events: auto;margin-left:10px;">
+                <input id="maxMsgLimit" min="1" max="99999999" maxlength="8" class="text_color path-input" style="width:65%;" type="number" value="${
+                  nowConfig.maxMsgSaveLimit == null
+                    ? 10000
+                    : nowConfig.maxMsgSaveLimit
+                }"/>条
+              </div>
+            </div>
+
+              <div class="vertical-list-item">
+              <div>
+                <h2>清理内存缓存消息时一次性清理多少</h2>
+                <span class="secondary-text">修改将自动保存并立即生效；一次性清理过多可能导致某些消息反撤回失败，过少则可能导致内存增长过快。</span>
+              </div>
+              <div style="width:30%;pointer-events: auto;margin-left:10px;">
+                <input id="deletePerTime" min="1" max="99999" maxlength="5" class="text_color path-input" style="width:65%;" type="number" value="${
+                  nowConfig.deleteMsgCountPerTime == null
+                    ? 500
+                    : nowConfig.deleteMsgCountPerTime
+                }"/>条
+              </div>
+            </div>
 
 
             </div>
@@ -304,121 +334,141 @@ export async function onSettingWindowCreated(view) {
     </body>
   `;
 
-    const parser = new DOMParser();
+  const parser = new DOMParser();
 
-    const doc2 = parser.parseFromString(new_navbar_item, "text/html");
-    const node2 = doc2.querySelector("body > div");
+  const doc2 = parser.parseFromString(new_navbar_item, "text/html");
+  const node2 = doc2.querySelector("body > div");
 
-    //清空消息
-    node2.querySelector("#clearDb").onclick = async () => {
-        await window.anti_recall.clearDb();
-    };
+  //清空消息
+  node2.querySelector("#clearDb").onclick = async () => {
+    await window.anti_recall.clearDb();
+  };
 
-    //选择颜色
-    const pickColor = node2.querySelector(".pick-color");
-    pickColor.value = nowConfig.mainColor;
-    pickColor.addEventListener("change", async (event) => {
-        nowConfig.mainColor = event.target.value;
-        await window.anti_recall.saveConfig(nowConfig);
-    });
-
-    //存数据库开关
-    var q_switch_savedb = node2.querySelector("#switchSaveDb");
-
-    if (nowConfig.saveDb == null || nowConfig.saveDb == true) {
-        q_switch_savedb.classList.toggle("is-active");
+  node2.querySelector("#maxMsgLimit").onblur = async () => {
+    var limit = parseFloat(node2.querySelector("#maxMsgLimit").value);
+    if (limit <= 0 || limit > 99999999) {
+      alert("你的数量输入有误！将不会保存，请重新输入");
+      return;
     }
+    nowConfig.maxMsgSaveLimit = limit;
+    await window.anti_recall.saveConfig(nowConfig);
+  };
 
-    q_switch_savedb.addEventListener("click", async () => {
-        if (q_switch_savedb.classList.contains("is-active")) {
-            nowConfig.saveDb = false;
-        } else {
-            nowConfig.saveDb = true;
-        }
-        q_switch_savedb.classList.toggle("is-active");
-        await window.anti_recall.saveConfig(nowConfig);
-    });
-
-    //反撤回自己消息开关
-    var q_switch_antiself = node2.querySelector("#switchAntiRecallSelf");
-
-    if (nowConfig.isAntiRecallSelfMsg == true) {
-        q_switch_antiself.classList.toggle("is-active");
+  node2.querySelector("#deletePerTime").onblur = async () => {
+    var limit = parseFloat(node2.querySelector("#deletePerTime").value);
+    if (limit <= 0 || limit > 99999) {
+      alert("你的数量输入有误！将不会保存，请重新输入");
+      return;
     }
+    nowConfig.deleteMsgCountPerTime = limit;
+    await window.anti_recall.saveConfig(nowConfig);
+  };
 
-    q_switch_antiself.addEventListener("click", async () => {
-        if (q_switch_antiself.classList.contains("is-active")) {
-            nowConfig.isAntiRecallSelfMsg = false;
-        } else {
-            nowConfig.isAntiRecallSelfMsg = true;
-        }
-        q_switch_antiself.classList.toggle("is-active");
-        await window.anti_recall.saveConfig(nowConfig);
-    });
+  //选择颜色
+  const pickColor = node2.querySelector(".pick-color");
+  pickColor.value = nowConfig.mainColor;
+  pickColor.addEventListener("change", async (event) => {
+    nowConfig.mainColor = event.target.value;
+    await window.anti_recall.saveConfig(nowConfig);
+  });
 
-    //阴影开关
-    var q_switch_shadow = node2.querySelector("#switchShadow");
+  //存数据库开关
+  var q_switch_savedb = node2.querySelector("#switchSaveDb");
 
-    if (nowConfig.enableShadow == null || nowConfig.enableShadow == true) {
-        q_switch_shadow.classList.toggle("is-active");
+  if (nowConfig.saveDb == null || nowConfig.saveDb == true) {
+    q_switch_savedb.classList.toggle("is-active");
+  }
+
+  q_switch_savedb.addEventListener("click", async () => {
+    if (q_switch_savedb.classList.contains("is-active")) {
+      nowConfig.saveDb = false;
+    } else {
+      nowConfig.saveDb = true;
     }
+    q_switch_savedb.classList.toggle("is-active");
+    await window.anti_recall.saveConfig(nowConfig);
+  });
 
-    q_switch_shadow.addEventListener("click", async () => {
-        if (q_switch_shadow.classList.contains("is-active")) {
-            nowConfig.enableShadow = false;
-        } else {
-            nowConfig.enableShadow = true;
-        }
-        q_switch_shadow.classList.toggle("is-active");
-        await window.anti_recall.saveConfig(nowConfig);
-    });
+  //反撤回自己消息开关
+  var q_switch_antiself = node2.querySelector("#switchAntiRecallSelf");
 
-    //提示开关
-    var q_switch_tip = node2.querySelector("#switchTip");
+  if (nowConfig.isAntiRecallSelfMsg == true) {
+    q_switch_antiself.classList.toggle("is-active");
+  }
 
-    if (nowConfig.enableTip == null || nowConfig.enableTip == true) {
-        q_switch_tip.classList.toggle("is-active");
+  q_switch_antiself.addEventListener("click", async () => {
+    if (q_switch_antiself.classList.contains("is-active")) {
+      nowConfig.isAntiRecallSelfMsg = false;
+    } else {
+      nowConfig.isAntiRecallSelfMsg = true;
     }
+    q_switch_antiself.classList.toggle("is-active");
+    await window.anti_recall.saveConfig(nowConfig);
+  });
 
-    q_switch_tip.addEventListener("click", async () => {
-        if (q_switch_tip.classList.contains("is-active")) {
-            //取消
-            nowConfig.enableTip = false;
-        } else {
-            //重新设置
-            nowConfig.enableTip = true;
-        }
-        q_switch_tip.classList.toggle("is-active");
-        await window.anti_recall.saveConfig(nowConfig);
-    });
+  //阴影开关
+  var q_switch_shadow = node2.querySelector("#switchShadow");
 
-    view.appendChild(node2);
+  if (nowConfig.enableShadow == null || nowConfig.enableShadow == true) {
+    q_switch_shadow.classList.toggle("is-active");
+  }
+
+  q_switch_shadow.addEventListener("click", async () => {
+    if (q_switch_shadow.classList.contains("is-active")) {
+      nowConfig.enableShadow = false;
+    } else {
+      nowConfig.enableShadow = true;
+    }
+    q_switch_shadow.classList.toggle("is-active");
+    await window.anti_recall.saveConfig(nowConfig);
+  });
+
+  //提示开关
+  var q_switch_tip = node2.querySelector("#switchTip");
+
+  if (nowConfig.enableTip == null || nowConfig.enableTip == true) {
+    q_switch_tip.classList.toggle("is-active");
+  }
+
+  q_switch_tip.addEventListener("click", async () => {
+    if (q_switch_tip.classList.contains("is-active")) {
+      //取消
+      nowConfig.enableTip = false;
+    } else {
+      //重新设置
+      nowConfig.enableTip = true;
+    }
+    q_switch_tip.classList.toggle("is-active");
+    await window.anti_recall.saveConfig(nowConfig);
+  });
+
+  view.appendChild(node2);
 }
 
 async function patchCss() {
-    nowConfig = await window.anti_recall.getNowConfig();
+  nowConfig = await window.anti_recall.getNowConfig();
 
-    var cssNode = document
-        .evaluate("/html/head/style[@id='anti-recall-css']", document)
-        .iterateNext();
-    if (cssNode) {
-        cssNode.parentElement.removeChild(cssNode);
-    }
-    var stylee = document.createElement("style");
-    stylee.type = "text/css";
-    stylee.id = "anti-recall-css";
-    var sHtml = `.message-content-recalled-parent {
+  var cssNode = document
+    .evaluate("/html/head/style[@id='anti-recall-css']", document)
+    .iterateNext();
+  if (cssNode) {
+    cssNode.parentElement.removeChild(cssNode);
+  }
+  var stylee = document.createElement("style");
+  stylee.type = "text/css";
+  stylee.id = "anti-recall-css";
+  var sHtml = `.message-content-recalled-parent {
                     border-radius: 10px;
                     position: relative;
                     overflow: unset !important;`;
-    if (nowConfig.enableShadow == true) {
-        sHtml += `  margin-top:3px;
+  if (nowConfig.enableShadow == true) {
+    sHtml += `  margin-top:3px;
                     margin-left:3px;
                     margin-right:3px;
                     margin-bottom: 30px;
                     box-shadow: 0px 0px 20px 5px ${nowConfig.mainColor};`;
-    }
-    sHtml += `                }
+  }
+  sHtml += `                }
             .recalledNoMargin {
                 margin-top: 0px!important;
             }
@@ -443,193 +493,175 @@ async function patchCss() {
                 color:${nowConfig.mainColor};
             }
         `;
-    stylee.innerHTML = sHtml;
-    document.getElementsByTagName("head").item(0).appendChild(stylee);
+  stylee.innerHTML = sHtml;
+  document.getElementsByTagName("head").item(0).appendChild(stylee);
 }
 
 onLoad();
 
 async function onLoad() {
-    anti_recall.repatchCss(async (event, _) => {
-        await patchCss();
-    });
+  anti_recall.repatchCss(async (event, _) => {
+    await patchCss();
+  });
 
-    //消息更新回调
-    anti_recall.recallTip(async (event, msgId) => {
-        console.log("[Anti-Recall]", "尝试反撤回消息ID", msgId);
+  //消息更新回调
+  anti_recall.recallTip(async (event, msgId) => {
+    console.log("[Anti-Recall]", "尝试反撤回消息ID", msgId);
 
-        var oldElement = document.getElementById(
-            `${msgId}-msgContainerMsgContent`
-        );
+    var oldElement = document.getElementById(`${msgId}-msgContainerMsgContent`);
 
-        var newElement = document.getElementById(`${msgId}-msgContent`);
+    var newElement = document.getElementById(`${msgId}-msgContent`);
 
-        var unixElement = document
-            .getElementById(`ml-${msgId}`)
+    var unixElement = document
+      .getElementById(`ml-${msgId}`)
+      ?.querySelector(".msg-content-container");
+
+    var cardElement = document.getElementById(`${msgId}-msgContent`);
+
+    var arkElement = document.getElementById(
+      `ark-msg-content-container_${msgId}`
+    );
+
+    if (oldElement != null) {
+      if (oldElement.classList.contains("gray-tip-message")) return;
+      await appendRecalledTag(oldElement);
+    } else if (newElement != null) {
+      if (newElement.classList.contains("gray-tip-message")) return;
+      await appendRecalledTag(newElement);
+    } else if (unixElement != null) {
+      if (unixElement.classList.contains("gray-tip-message")) return;
+      await appendRecalledTag(unixElement.parentElement);
+    } else if (cardElement != null) {
+      if (cardElement.classList.contains("gray-tip-message")) return;
+      cardElement.classList.add("recalledNoMargin");
+      await appendRecalledTag(cardElement.parentElement);
+    } else if (arkElement != null) {
+      if (arkElement.classList.contains("gray-tip-message")) return;
+      arkElement.classList.add("recalledNoMargin");
+      await appendRecalledTag(arkElement.parentElement);
+    }
+  });
+  //消息列表更新回调
+  anti_recall.recallTipList(async (event, msgIdList) => {
+    recalledMsgList = msgIdList;
+    await render();
+  });
+
+  await patchCss();
+
+  var observerRendering = false;
+  //监控消息列表，如果有撤回则渲染
+  const observer = new MutationObserver(async (mutationsList) => {
+    for (let mutation of mutationsList) {
+      if (mutation.type === "childList") {
+        if (
+          mutation.addedNodes != null &&
+          mutation.addedNodes.length > 0 &&
+          mutation.addedNodes[0].classList != null &&
+          mutation.addedNodes[0].classList.contains("message-content-recalled")
+        ) {
+          //是添加的撤回标记，直接忽略
+        } else {
+          if (observerRendering) continue;
+          observerRendering = true;
+          setTimeout(() => {
+            observerRendering = false;
+            render();
+          }, 50);
+        }
+      }
+    }
+  });
+
+  var finder = setInterval(() => {
+    if (document.querySelector(".ml-list.list")) {
+      clearInterval(finder);
+      console.log("[Anti-Recall]", "检测到聊天区域，已在当前页面加载反撤回");
+      const targetNode = document.querySelector(".ml-list.list");
+      const config = {
+        attributes: false,
+        childList: true,
+        subtree: true,
+      };
+      observer.observe(targetNode, config);
+    }
+  }, 100);
+
+  async function render() {
+    // console.log("[Anti-Recall]", "尝试反撤回消息列表", recalledMsgList);
+
+    var elements = document
+      .querySelector(".chat-msg-area__vlist")
+      ?.querySelectorAll(".ml-item");
+
+    nowConfig = await window.anti_recall.getNowConfig();
+
+    for (var el of elements) {
+      var findMsgId = recalledMsgList.find((i) => i == el.id);
+      if (findMsgId != null) {
+        var msgId = findMsgId;
+        try {
+          var oldElement = el.querySelector(
+            `div[id='${msgId}-msgContainerMsgContent']`
+          );
+
+          var newElement = el.querySelector(`div[id='${msgId}-msgContent']`);
+
+          var unixElement = el
+            .querySelector(`div[id='ml-${msgId}']`)
             ?.querySelector(".msg-content-container");
 
-        var cardElement = document.getElementById(`${msgId}-msgContent`);
+          var cardElement = el.querySelector(`div[id='${msgId}-msgContent']`);
 
-        var arkElement = document.getElementById(
-            `ark-msg-content-container_${msgId}`
-        );
+          var arkElement = el.querySelector(
+            `div[id='ark-msg-content-container_${msgId}']`
+          );
 
-        if (oldElement != null) {
-            if (oldElement.classList.contains("gray-tip-message")) return;
+          if (oldElement != null) {
+            if (oldElement.classList.contains("gray-tip-message")) continue;
             await appendRecalledTag(oldElement);
-        } else if (newElement != null) {
-            if (newElement.classList.contains("gray-tip-message")) return;
+          } else if (newElement != null) {
+            if (newElement.classList.contains("gray-tip-message")) continue;
             await appendRecalledTag(newElement);
-        } else if (unixElement != null) {
-            if (unixElement.classList.contains("gray-tip-message")) return;
+          } else if (unixElement != null) {
+            if (unixElement.classList.contains("gray-tip-message")) continue;
             await appendRecalledTag(unixElement.parentElement);
-        } else if (cardElement != null) {
-            if (cardElement.classList.contains("gray-tip-message")) return;
+          } else if (cardElement != null) {
+            if (cardElement.classList.contains("gray-tip-message")) continue;
             cardElement.classList.add("recalledNoMargin");
             await appendRecalledTag(cardElement.parentElement);
-        } else if (arkElement != null) {
-            if (arkElement.classList.contains("gray-tip-message")) return;
+          } else if (arkElement != null) {
+            if (arkElement.classList.contains("gray-tip-message")) continue;
             arkElement.classList.add("recalledNoMargin");
             await appendRecalledTag(arkElement.parentElement);
+          }
+        } catch (e) {
+          console.log("[Anti-Recall]", "反撤回消息时出错", e);
         }
-    });
-    //消息列表更新回调
-    anti_recall.recallTipList(async (event, msgIdList) => {
-        recalledMsgList = msgIdList;
-        await render();
-    });
-
-    await patchCss();
-
-    var observerRendering = false;
-    //监控消息列表，如果有撤回则渲染
-    const observer = new MutationObserver(async (mutationsList) => {
-        for (let mutation of mutationsList) {
-            if (mutation.type === "childList") {
-                if (
-                    mutation.addedNodes != null &&
-                    mutation.addedNodes.length > 0 &&
-                    mutation.addedNodes[0].classList != null &&
-                    mutation.addedNodes[0].classList.contains(
-                        "message-content-recalled"
-                    )
-                ) {
-                    //是添加的撤回标记，直接忽略
-                } else {
-                    if (observerRendering) continue;
-                    observerRendering = true;
-                    setTimeout(() => {
-                        observerRendering = false;
-                        render();
-                    }, 50);
-                }
-            }
-        }
-    });
-
-    var finder = setInterval(() => {
-        if (document.querySelector(".ml-list.list")) {
-            clearInterval(finder);
-            console.log(
-                "[Anti-Recall]",
-                "检测到聊天区域，已在当前页面加载反撤回"
-            );
-            const targetNode = document.querySelector(".ml-list.list");
-            const config = {
-                attributes: false,
-                childList: true,
-                subtree: true
-            };
-            observer.observe(targetNode, config);
-        }
-    }, 100);
-
-    async function render() {
-        // console.log("[Anti-Recall]", "尝试反撤回消息列表", recalledMsgList);
-
-        var elements = document
-            .querySelector(".chat-msg-area__vlist")
-            ?.querySelectorAll(".ml-item");
-
-        nowConfig = await window.anti_recall.getNowConfig();
-
-        for (var el of elements) {
-            var findMsgId = recalledMsgList.find((i) => i == el.id);
-            if (findMsgId != null) {
-                var msgId = findMsgId;
-                try {
-                    var oldElement = el.querySelector(
-                        `div[id='${msgId}-msgContainerMsgContent']`
-                    );
-
-                    var newElement = el.querySelector(
-                        `div[id='${msgId}-msgContent']`
-                    );
-
-                    var unixElement = el
-                        .querySelector(`div[id='ml-${msgId}']`)
-                        ?.querySelector(".msg-content-container");
-
-                    var cardElement = el.querySelector(
-                        `div[id='${msgId}-msgContent']`
-                    );
-
-                    var arkElement = el.querySelector(
-                        `div[id='ark-msg-content-container_${msgId}']`
-                    );
-
-                    if (oldElement != null) {
-                        if (oldElement.classList.contains("gray-tip-message"))
-                            continue;
-                        await appendRecalledTag(oldElement);
-                    } else if (newElement != null) {
-                        if (newElement.classList.contains("gray-tip-message"))
-                            continue;
-                        await appendRecalledTag(newElement);
-                    } else if (unixElement != null) {
-                        if (unixElement.classList.contains("gray-tip-message"))
-                            continue;
-                        await appendRecalledTag(unixElement.parentElement);
-                    } else if (cardElement != null) {
-                        if (cardElement.classList.contains("gray-tip-message"))
-                            continue;
-                        cardElement.classList.add("recalledNoMargin");
-                        await appendRecalledTag(cardElement.parentElement);
-                    } else if (arkElement != null) {
-                        if (arkElement.classList.contains("gray-tip-message"))
-                            continue;
-                        arkElement.classList.add("recalledNoMargin");
-                        await appendRecalledTag(arkElement.parentElement);
-                    }
-                } catch (e) {
-                    console.log("[Anti-Recall]", "反撤回消息时出错", e);
-                }
-            }
-        }
+      }
     }
+  }
 
-    async function appendRecalledTag(msgElement) {
-        if (!msgElement) return;
+  async function appendRecalledTag(msgElement) {
+    if (!msgElement) return;
 
-        var currRecalledTip = msgElement.querySelector(
-            ".message-content-recalled"
-        );
-        if (currRecalledTip == null) {
-            msgElement.classList.add("message-content-recalled-parent");
+    var currRecalledTip = msgElement.querySelector(".message-content-recalled");
+    if (currRecalledTip == null) {
+      msgElement.classList.add("message-content-recalled-parent");
 
-            if (nowConfig.enableTip == true) {
-                const recalledEl = document.createElement("div");
-                recalledEl.innerText = "已撤回";
-                recalledEl.classList.add("message-content-recalled");
+      if (nowConfig.enableTip == true) {
+        const recalledEl = document.createElement("div");
+        recalledEl.innerText = "已撤回";
+        recalledEl.classList.add("message-content-recalled");
 
-                msgElement.appendChild(recalledEl);
-                setTimeout(() => {
-                    recalledEl.style.transform = "translateX(0)";
-                    recalledEl.style.opacity = "1";
-                }, 5);
-            }
-        } else {
-            //已经有撤回标记了，不再重复添加
-        }
+        msgElement.appendChild(recalledEl);
+        setTimeout(() => {
+          recalledEl.style.transform = "translateX(0)";
+          recalledEl.style.opacity = "1";
+        }, 5);
+      }
+    } else {
+      //已经有撤回标记了，不再重复添加
     }
+  }
 }
