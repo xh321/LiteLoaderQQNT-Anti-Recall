@@ -87,12 +87,14 @@ async function onLoad() {
         valueEncoding: "json"
     });
 
-    db.open((e) =>
-        output(
-            "打开数据库失败，可能是QQ进程未完全退出。请查看下面详细错误信息中的cause部分：",
-            e
-        )
-    );
+    db.open((e) => {
+        if(e!==undefined && e!==null) { 
+            output(
+                "打开数据库失败，可能是QQ进程未完全退出。请查看下面详细错误信息中的cause部分：",
+                e
+            )
+        }
+    });
 
     ipcMain.handle("LiteLoader.anti_recall.clearDb", async (event, message) => {
         dialog
