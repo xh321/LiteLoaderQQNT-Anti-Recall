@@ -529,7 +529,7 @@ async function onLoad() {
       await appendRecalledTag(oldElement);
     } else if (newElement != null) {
       if (newElement.classList.contains("gray-tip-message")) return;
-      await appendRecalledTag(newElement);
+      await appendRecalledTag(newElement.parentElement);
     } else if (unixElement != null) {
       if (unixElement.classList.contains("gray-tip-message")) return;
       await appendRecalledTag(unixElement.parentElement);
@@ -624,7 +624,7 @@ async function onLoad() {
             await appendRecalledTag(oldElement);
           } else if (newElement != null) {
             if (newElement.classList.contains("gray-tip-message")) continue;
-            await appendRecalledTag(newElement);
+            await appendRecalledTag(newElement.parentElement);
           } else if (unixElement != null) {
             if (unixElement.classList.contains("gray-tip-message")) continue;
             await appendRecalledTag(unixElement.parentElement);
