@@ -465,8 +465,10 @@ async function patchCss() {
     sHtml += `  margin-top:3px;
                     margin-left:3px;
                     margin-right:3px;
-                    margin-bottom: 30px;
+                    margin-bottom: 25px;
                     box-shadow: 0px 0px 20px 5px ${nowConfig.mainColor};`;
+  } else {
+    sHtml += `margin-bottom: 15px;`;
   }
   sHtml += `                }
             .recalledNoMargin {
@@ -475,7 +477,7 @@ async function patchCss() {
 
             .message-content-recalled {
                 position: absolute;
-                top: calc(100% + 8px);
+                top: calc(100% + 6px);
                 font-size: 12px;
                 white-space: nowrap;
                 color: var(--text-color);
