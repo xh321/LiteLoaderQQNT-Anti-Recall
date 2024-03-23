@@ -541,6 +541,9 @@ async function onLoad() {
       if (arkElement.classList.contains("gray-tip-message")) return;
       arkElement.classList.add("recalledNoMargin");
       await appendRecalledTag(arkElement.parentElement);
+    } else{
+      var container = document.querySelector(`.ml-item[id='${msgId}'] .msg-content-container`);
+      if (container) await appendRecalledTag(container);
     }
   });
   //消息列表更新回调
