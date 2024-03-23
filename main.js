@@ -560,7 +560,8 @@ function onBrowserWindowCreated(window) {
               //拦截撤回IPC
               if (
                 args1.cmdName != null &&
-                args1.cmdName.indexOf("onMsgInfoListUpdate") != -1 &&
+                (args1.cmdName.indexOf("onMsgInfoListUpdate") != -1 ||
+                  args1.cmdName.indexOf("onActiveMsgInfoUpdate") != -1) &&
                 args1.payload != null &&
                 args1.payload.msgList instanceof Array &&
                 args1.payload.msgList[0].msgType == 5 &&
@@ -610,7 +611,8 @@ function onBrowserWindowCreated(window) {
               else if (
                 (args1.cmdName != null &&
                   args1.payload != null &&
-                  args1.cmdName.indexOf("onRecvMsg") != -1 &&
+                  (args1.cmdName.indexOf("onRecvMsg") != -1 ||
+                    args1.cmdName.indexOf("onRecvActiveMsg") != -1) &&
                   args1.payload.msgList instanceof Array) ||
                 (args1.cmdName.indexOf("onAddSendMsg") != -1 &&
                   args1.payload.msgRecord != null) ||
