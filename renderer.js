@@ -637,6 +637,10 @@ async function onLoad() {
             arkElement.classList.add("recalledNoMargin");
             await appendRecalledTag(arkElement.parentElement);
           }
+          else{
+	          var container = el.querySelector('.msg-content-container');
+	          if (container) await appendRecalledTag(container);
+          }
         } catch (e) {
           console.log("[Anti-Recall]", "反撤回消息时出错", e);
         }
