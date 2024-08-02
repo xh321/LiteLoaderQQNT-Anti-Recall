@@ -457,16 +457,36 @@ async function patchCss() {
   var stylee = document.createElement("style");
   stylee.type = "text/css";
   stylee.id = "anti-recall-css";
-  var sHtml = `.message-content-recalled-parent {
+
+  var sHtml = `   .message-content__wrapper {
+                    padding: 10px 10px 10px 10px;
+                    color: var(--bubble_guest_text);
+                    display: flex;
+                    grid-row-start: content;
+                    grid-column-start: content;
+                    grid-row-end: content;
+                    grid-column-end: content;
+                    max-width: -webkit-fill-available;
+                    min-height: 38px;
+                    overflow-x: hidden;
+                    overflow-y: hidden;
+                    border-radius: 10px; 
+                  }
+
+                  .message-content__wrapper.message-content-recalled-parent {
+                    padding: 0px !important;
+                  }
+
+                  .message-content-recalled-parent {
                     border-radius: 10px;
                     position: relative;
                     overflow: unset !important;`;
   if (nowConfig.enableShadow == true) {
-    sHtml += `  margin-top:3px;
+    sHtml += `      margin-top:3px;
                     margin-left:3px;
                     margin-right:3px;
                     margin-bottom: 25px;
-                    box-shadow: 0px 0px 20px 5px ${nowConfig.mainColor};`;
+                    box-shadow: 0px 0px 8px 5px ${nowConfig.mainColor};`;
   } else {
     sHtml += `margin-bottom: 15px;`;
   }
@@ -478,10 +498,10 @@ async function patchCss() {
             .message-content-recalled {
                 position: absolute;
                 top: calc(100% + 6px);
+                left: 0;
                 font-size: 12px;
                 white-space: nowrap;
                 color: var(--text-color);
-                left: 0;
                 background-color: var(--background-color-05);
                 backdrop-filter: blur(28px);
                 padding: 4px 8px;
