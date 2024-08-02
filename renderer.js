@@ -497,7 +497,7 @@ async function patchCss() {
 
             .message-content-recalled {
                 position: absolute;
-                top: calc(100% + 7px);
+                top: calc(100% + 6px);
                 left: 0;
                 font-size: 12px;
                 white-space: nowrap;
