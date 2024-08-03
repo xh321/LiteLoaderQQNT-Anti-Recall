@@ -459,7 +459,6 @@ async function patchCss() {
   stylee.id = "anti-recall-css";
 
   var sHtml = `   .message-content__wrapper {
-                    padding: 10px 10px 10px 10px;
                     color: var(--bubble_guest_text);
                     display: flex;
                     grid-row-start: content;
@@ -468,8 +467,7 @@ async function patchCss() {
                     grid-column-end: content;
                     max-width: -webkit-fill-available;
                     min-height: 38px;
-                    overflow-x: hidden;
-                    overflow-y: hidden;
+                    overflow: visible !important;
                     border-radius: 10px; 
                   }
 
