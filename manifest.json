@@ -4,7 +4,7 @@
     "name": "防撤回",
     "slug": "anti_recall",
     "description": "防止QQNT撤回消息",
-    "version": "0.2.41",
+    "version": "0.2.43",
     "icon": "./icon.png",
     "authors": [
         {
@@ -16,7 +16,7 @@
         "repo": "xh321/LiteLoaderQQNT-Anti-Recall",
         "branch": "master",
         "release": {
-            "tag": "0.2.41",
+            "tag": "0.2.43",
             "file": "qq-anti-recall.zip"
         }
     },
