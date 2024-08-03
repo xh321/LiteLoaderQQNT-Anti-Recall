@@ -467,8 +467,7 @@ async function patchCss() {
                     grid-column-end: content;
                     max-width: -webkit-fill-available;
                     min-height: 38px;
-                    overflow-x: hidden;
-                    overflow-y: hidden;
+                    overflow: visible !important;
                     border-radius: 10px; 
                   }
 
