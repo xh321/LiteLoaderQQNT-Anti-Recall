@@ -459,6 +459,7 @@ async function patchCss() {
   stylee.id = "anti-recall-css";
 
   var sHtml = `   .message-content__wrapper {
+                    padding: 10px 10px 10px 10px;
                     color: var(--bubble_guest_text);
                     display: flex;
                     grid-row-start: content;
