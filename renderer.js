@@ -660,6 +660,7 @@ async function onLoad() {
           }
           else{
 	          var container = el.querySelector('.msg-content-container');
+		  if (!container) container = el.querySelector('.file-message--content');
 	          if (container) await appendRecalledTag(container);
           }
         } catch (e) {
