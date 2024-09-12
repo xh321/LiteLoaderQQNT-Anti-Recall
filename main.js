@@ -1,12 +1,12 @@
-const http = require("http");
-const https = require("https");
 const fs = require("fs");
 const path = require("path");
 const { app, ipcMain, dialog } = require("electron");
+const { ImgDownloader } = require("./imgDownloader.js");
 
 var configFilePath = "";
 var pluginDataDir = path.join(LiteLoader.path.data, "anti_recall");
 
+const imgDownloader = new ImgDownloader();
 const { Level } = require("level");
 var db = null;
 
@@ -79,21 +79,21 @@ async function onLoad() {
 
     db.open((e) => {
       if (e !== undefined && e !== null) {
-        app.whenReady().then(() => {
-          dialog
-            .showMessageBox({
-              type: "warning",
-              title: "警告",
-              message:
-                "打开反撤回数据库失败，可能是上次QQ进程未完全退出或同时开启了多个QQ（插件不支持QQ多开，如需多开请关闭保存到数据库功能）。建议关闭QQ并彻底结束QQ进程，再重启QQ，否则反撤回消息无法正常保存（即时反撤回仍生效，只是重启QQ后会丢失）。",
-              buttons: ["继续打开QQ", "关闭QQ"],
-            })
-            .then((r) => {
-              if (r.response == 1) {
-                app.exit();
-              }
-            });
-        });
+        // app.whenReady().then(() => {
+        //   dialog
+        //     .showMessageBox({
+        //       type: "warning",
+        //       title: "警告",
+        //       message:
+        //         "打开反撤回数据库失败，可能是上次QQ进程未完全退出。建议关闭QQ并彻底结束QQ进程，再重启QQ，否则反撤回消息无法正常保存（即使反撤回仍生效，只是重启QQ后会丢失）。",
+        //       buttons: ["继续打开QQ", "关闭QQ"],
+        //     })
+        //     .then((r) => {
+        //       if (r.response == 1) {
+        //         app.exit();
+        //       }
+        //     });
+        // });
         output(
           "打开数据库失败，可能是QQ进程未完全退出。请查看下面详细错误信息中的cause部分：",
           e
@@ -125,207 +125,14 @@ async function onLoad() {
       });
   });
 
-  // 老方法，废弃
-  // setTimeout(async () => {
-  //     await loadDb()
-  //         .catch(async (e) => {
-  //             output(
-  //                 "Error while loading recalled msgs from db: " +
-  //                     e.toString(),
-  //                 ", retrying..."
-  //             );
-  //             await db.open();
-  //             await loadDb();
-  //         })
-  //         .catch((e) => {
-  //             output(
-  //                 "Error while loading recalled msgs from db: " +
-  //                     e.toString(),
-  //                 ", stop load."
-  //             );
-  //         });
-  // }, 100);
-
   app.on("quit", async () => {
     output("Closing db...");
     await db.close();
   });
 }
 
-// 废弃
-// async function loadDb() {
-//     if (nowConfig.saveDb) {
-//         output("Loading recalled msgs from db...");
-//         var counter = 0;
-//         for await (const value of db.values()) {
-//             counter++;
-//             recalledMsg.push(value);
-//             if (value.msg == null) continue;
-//             for (item of value.msg.elements) {
-//                 if (item.picElement != null) {
-//                     item.picElement.thumbPath = new Map([
-//                         [
-//                             0,
-//                             item.picElement.sourcePath
-//                                 .replace("Ori", "Thumb")
-//                                 .replace(
-//                                     item.picElement.md5HexStr,
-//                                     item.picElement.md5HexStr + "_0"
-//                                 )
-//                         ],
-//                         [
-//                             198,
-//                             item.picElement.sourcePath
-//                                 .replace("Ori", "Thumb")
-//                                 .replace(
-//                                     item.picElement.md5HexStr,
-//                                     item.picElement.md5HexStr + "_198"
-//                                 )
-//                         ],
-//                         [
-//                             720,
-//                             item.picElement.sourcePath
-//                                 .replace("Ori", "Thumb")
-//                                 .replace(
-//                                     item.picElement.md5HexStr,
-//                                     item.picElement.md5HexStr + "_720"
-//                                 )
-//                         ]
-//                     ]);
-//                 }
-//             }
-//         }
-//         output(`Loaded ${counter} msgs.`);
-//     } else {
-//         output("Db saving is disabled, continue.");
-//     }
-// }
-
 var msgFlow = [];
 var recalledMsg = [];
-
-function request(url) {
-  return new Promise((resolve, reject) => {
-    const protocol = url.startsWith("https") ? https : http;
-    const req = protocol.get(url);
-    req.on("error", (error) => reject(error));
-    req.on("response", (res) => {
-      // 发生跳转就继续请求
-      if (res.statusCode >= 300 && res.statusCode <= 399) {
-        return resolve(request(res.headers.location));
-      }
-      const chunks = [];
-      res.on("error", (error) => reject(error));
-      res.on("data", (chunk) => chunks.push(chunk));
-      res.on("end", () => resolve(Buffer.concat(chunks)));
-    });
-  });
-}
-
-// 下载被撤回的图片（抄自Lite-Tools）
-async function processPic(msgItem) {
-  msgItem?.elements?.forEach(async (el) => {
-    if (el?.picElement) {
-      const pic = el.picElement;
-      const picName = pic.md5HexStr.toUpperCase();
-      const picUrl = `https://gchat.qpic.cn/gchatpic_new/0/0-0-${picName}/`;
-      output("Download lost pic(s)... url=", picUrl, "msgId=", msgItem.msgId);
-      if (!fs.existsSync(pic.sourcePath)) {
-        output("Download pic:", `${picUrl}0`);
-        const body = await request(`${picUrl}0`);
-        fs.mkdirSync(path.dirname(pic.sourcePath), { recursive: true });
-        fs.writeFileSync(pic.sourcePath, body);
-      } else {
-        output("Pic already existed, skip.", pic.sourcePath);
-      }
-      // 修复本地数据中的错误
-      if (
-        pic?.thumbPath &&
-        (pic.thumbPath instanceof Array || pic.thumbPath instanceof Object)
-      ) {
-        pic.thumbPath = new Map([
-          [
-            0,
-            pic.sourcePath
-              .replace("Ori", "Thumb")
-              .replace(pic.md5HexStr, pic.md5HexStr + "_0"),
-          ],
-          [
-            198,
-            pic.sourcePath
-              .replace("Ori", "Thumb")
-              .replace(pic.md5HexStr, pic.md5HexStr + "_198"),
-          ],
-          [
-            720,
-            pic.sourcePath
-              .replace("Ori", "Thumb")
-              .replace(pic.md5HexStr, pic.md5HexStr + "_720"),
-          ],
-        ]);
-      }
-      if (
-        pic?.thumbPath &&
-        (pic.thumbPath instanceof Array || pic.thumbPath instanceof Map)
-      ) {
-        pic.thumbPath.forEach(async (el, key) => {
-          if (!fs.existsSync(el)) {
-            output("Download thumbs:", `${picUrl}${key}`);
-            const body = await request(`${picUrl}${key}`);
-            fs.mkdirSync(path.dirname(el), { recursive: true });
-            fs.writeFileSync(el, body);
-          }
-        });
-      }
-    }
-  });
-}
-
-//废弃（老方法）
-// async function downloadPic(msgList) {
-//     if (msgList == null) return;
-
-//     for (item of msgList.elements) {
-//         if (item.picElement) {
-//             var pic = item.picElement;
-//             var picBasePath = pic.md5HexStr.toUpperCase();
-//             var urlBase = `https://gchat.qpic.cn/gchatpic_new/0/0-0-${picBasePath}/`;
-
-//             output(
-//                 `[${pic.md5HexStr
-//                     .toUpperCase()
-//                     .substring(0, 5)}]Downloading lost pic(s)... ${urlBase}`
-//             );
-
-//             if (!fs.existsSync(pic.sourcePath)) {
-//                 const body = await request(`${urlBase}0`);
-//                 fs.mkdirSync(path.dirname(pic.sourcePath), { recursive: true });
-//                 fs.writeFileSync(pic.sourcePath, body);
-//             } else {
-//                 output(
-//                     `[${pic.md5HexStr.toUpperCase().substring(0, 5)}] ${
-//                         pic.sourcePath
-//                     } Pic(s) already existed, skip.`
-//                 );
-//             }
-
-//             if (pic.thumbPath instanceof Array) {
-//                 pic.thumbPath.forEach(async (value, key) => {
-//                     if (!fs.existsSync(value)) {
-//                         const body = await request(`${urlBase}${key}`);
-//                         fs.mkdirSync(path.dirname(value), { recursive: true });
-//                         fs.writeFileSync(value, body);
-//                     }
-//                 });
-//             }
-//             output(
-//                 `[${pic.md5HexStr
-//                     .toUpperCase()
-//                     .substring(0, 5)}]Download completed!`
-//             );
-//         }
-//     }
-// }
 
 function insertDb(msg) {
   if (db != null) {
@@ -490,7 +297,7 @@ function onBrowserWindowCreated(window) {
                   //     ]
                   // );
 
-                  await processPic(olderMsgFromRecalledMsg.msg);
+                  await imgDownloader.downloadPic(olderMsgFromRecalledMsg.msg);
 
                   args[1].msgList[i] = olderMsgFromRecalledMsg.msg;
 
@@ -507,7 +314,7 @@ function onBrowserWindowCreated(window) {
                     recalledMsg.push(olderMsg);
                   }
 
-                  await processPic(olderMsg.msg);
+                  await imgDownloader.downloadPic(olderMsg.msg);
 
                   output(
                     "Detected recall, intercepted and recovered from msgFlow"
@@ -520,7 +327,7 @@ function onBrowserWindowCreated(window) {
                     recalledMsg.push(dbMsg);
                   }
 
-                  await processPic(dbMsg.msg);
+                  await imgDownloader.downloadPic(dbMsg.msg);
 
                   output(
                     "Detected recall, intercepted and recovered from dbMsg"
@@ -552,6 +359,9 @@ function onBrowserWindowCreated(window) {
               var args1 = args[1][0];
               if (args1 == null) return;
 
+              if (args1.cmdName.indexOf("onProfileDetailInfoChanged") != -1) {
+                myUid = args1.payload.info.uid;
+              }
               //方法一：获取个人信息的IPC，用来获取个人UID，避免防撤回自己的消息
               // if (args1.cmdName.indexOf("onProfileDetailInfoChanged") != -1) {
               //     myUid = args1.payload.info.uid;
@@ -597,8 +407,8 @@ function onBrowserWindowCreated(window) {
                     }
                   }
 
-                  await processPic(olderMsg?.msg);
-                  await processPic(olderMsgFromRecalledMsg?.msg);
+                  await imgDownloader.downloadPic(olderMsg?.msg);
+                  await imgDownloader.downloadPic(olderMsgFromRecalledMsg?.msg);
 
                   args[1][0].cmdName = "none";
                   args[1][0].payload.msgList.pop();
