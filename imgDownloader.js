@@ -52,21 +52,15 @@ class ImgDownloader {
         const thumbMap = new Map([
           [
             0,
-            pic.sourcePath
-              .replace("Ori", "Thumb")
-              .replace(pic.md5HexStr, pic.md5HexStr + "_0_recalled"),
+            pic.sourcePath,
           ],
           [
             198,
-            pic.sourcePath
-              .replace("Ori", "Thumb")
-              .replace(pic.md5HexStr, pic.md5HexStr + "_198_recalled"),
+            pic.sourcePath,
           ],
           [
             720,
-            pic.sourcePath
-              .replace("Ori", "Thumb")
-              .replace(pic.md5HexStr, pic.md5HexStr + "_720_recalled"),
+            pic.sourcePath,
           ],
         ]);
         const picUrl = await this.getImageUrl(el.picElement);
@@ -87,12 +81,12 @@ class ImgDownloader {
           this.output("Pic already existed, skip.", pic.sourcePath);
         }
         //需要复制原图到预览图目录
-        thumbMap.forEach(async (el, key) => {
-          if (!fs.existsSync(el)) {
-            this.output("Copy thumbs:", `source: ${pic.sourcePath} to ${el}`);
-            fs.copyFile(pic.sourcePath, el);
-          }
-        });
+        // thumbMap.forEach(async (el, key) => {
+        //   if (!fs.existsSync(el)) {
+        //     this.output("Copy thumbs:", `source: ${pic.sourcePath} to ${el}`);
+        //     fs.copyFile(pic.sourcePath, el);
+        //   }
+        // });
 
         // 修复本地数据中的错误
         if (
