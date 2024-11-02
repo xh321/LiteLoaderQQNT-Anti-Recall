@@ -7,7 +7,7 @@ var configFilePath = "";
 var pluginDataDir = path.join(LiteLoader.path.data, "anti_recall");
 
 const imgDownloader = new ImgDownloader();
-const { Level } = require("level");
+const Level = require("level-party");
 var db = null;
 
 var sampleConfig = {
@@ -73,7 +73,7 @@ async function onLoad() {
   });
 
   if (nowConfig.saveDb) {
-    db = new Level(path.join(pluginDataDir, "qq-recalled-db"), {
+    db = Level(path.join(pluginDataDir, "qq-recalled-db"), {
       valueEncoding: "json",
     });
 
@@ -264,15 +264,18 @@ function onBrowserWindowCreated(window) {
               needUpdateIdx.sort((a, b) => b - a);
 
               for (var i of needUpdateIdx) {
-                var currMsgId = args[1].msgList[i].msgId;
+                let recallTipMsg = args[1].msgList[i];
+                var currMsgId = recallTipMsg.msgId;
 
                 //如果之前存了消息
-                var olderMsg = msgFlow.find((i) => i.id == currMsgId);
-                var olderMsgFromRecalledMsg = recalledMsg.find(
+                let olderMsg = msgFlow.find((i) => i.id == currMsgId);
+                let olderMsgFromRecalledMsg = recalledMsg.find(
                   (i) => i.id == currMsgId
                 );
 
                 var dbMsg = await getMsgById(currMsgId);
+                let fromName;
+                let originalMsg;
 
                 //优先从已保存的撤回的消息中获取
                 if (olderMsgFromRecalledMsg != null) {
@@ -296,44 +299,72 @@ function onBrowserWindowCreated(window) {
                   //         }
                   //     ]
                   // );
-
-                  await imgDownloader.downloadPic(olderMsgFromRecalledMsg.msg);
-
-                  args[1].msgList[i] = olderMsgFromRecalledMsg.msg;
-
-                  output(
-                    "Detected recall, intercepted and recovered from old msg"
-                  );
+                  originalMsg =olderMsgFromRecalledMsg;
+                  fromName = "old msg";
                 }
                 //如果没有存过，则说明他在消息流里
                 else if (olderMsg != null) {
-                  args[1].msgList[i] = olderMsg.msg;
-
                   //没专门存过这条消息到专门的反撤回数组中，就存一下
                   if (olderMsgFromRecalledMsg == null) {
                     recalledMsg.push(olderMsg);
                   }
 
-                  await imgDownloader.downloadPic(olderMsg.msg);
-
-                  output(
-                    "Detected recall, intercepted and recovered from msgFlow"
-                  );
+                  originalMsg = olderMsg;
+                  fromName = "msgFlow";
                 } else if (dbMsg != null) {
-                  args[1].msgList[i] = dbMsg.msg;
-
                   //没专门存过这条消息到专门的反撤回数组中，就存一下
                   if (olderMsgFromRecalledMsg == null) {
                     recalledMsg.push(dbMsg);
                   }
 
-                  await imgDownloader.downloadPic(dbMsg.msg);
-
-                  output(
-                    "Detected recall, intercepted and recovered from dbMsg"
-                  );
+                  originalMsg = dbMsg;
+                  fromName = "dbMsg";
                 }
-                args[1].msgList[i].isOnlineMsg = true;
+
+                if (originalMsg !== undefined) {
+                  if (originalMsg.msg instanceof Object) {
+                    let msg = Object.assign({}, originalMsg.msg);//克隆
+
+                    msg.isOnlineMsg = true;
+                    await imgDownloader.downloadPic(msg);
+                    output(
+                      "Detected recall, intercepted and recovered from " + fromName
+                    );
+
+                    //解决 某些情况（可能是新版本在群聊中的情况） 不显示消息
+                    //方法：撤回提示消息中一些对象存在一些特殊属性，保留这些特殊属性
+                    //因为原来使用JSON.stringify解析对象，无法解析特殊属性
+                    for (let key in msg) {
+                      if (
+                        [
+                          'msgSeq',//保持序列
+                          'cntSeq',//保持序列
+                          'clientSeq',//保持序列
+                          'sendStatus',//防止消息一直在加载
+                          'emojiLikesList',//表情回应，撤回消息提示中会包含（原本的真实消息貌似不会包含）
+                        ].includes(key)
+                      ) {
+                        continue;
+                      }
+                      let newValue = msg[key];
+                      let oldValue = recallTipMsg[key];
+                      let value = newValue;
+                      if (
+                        ["msgAttrs", "msgMeta", "generalFlags"].includes(key) &&
+                        newValue instanceof Object &&
+                        oldValue instanceof Object
+                      ) {
+                        for (let key in oldValue) {//删除所有OwnProperty
+                          if (oldValue.hasOwnProperty(key)) {
+                            delete oldValue[key];
+                          }
+                        }
+                        value = Object.assign(oldValue, newValue);//合并
+                      }
+                      recallTipMsg[key] = value;
+                    }
+                  }
+                }
               }
               original_send.call(
                 window.webContents,
