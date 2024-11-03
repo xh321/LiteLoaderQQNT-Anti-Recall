@@ -34,26 +34,22 @@ class RkeyManager {
   }
 
   async fetchServerRkey() {
-    return (
-      new Promise() <
-      ServerRkeyData >
-      ((resolve, reject) => {
-        fetch(this.serverUrl)
-          .then((response) => {
-            if (!response.ok) {
-              return reject(response.statusText); // 请求失败，返回错误信息
-            }
-            return response.json(); // 解析 JSON 格式的响应体
-          })
-          .then((data) => {
-            resolve(data);
-          })
-          .catch((error) => {
-            reject(error);
-          });
-      })
-    );
+    return new Promise((resolve, reject) => {
+      fetch(this.serverUrl)
+        .then((response) => {
+          if (!response.ok) {
+            return reject(response.statusText); // 请求失败，返回错误信息
+          }
+          return response.json(); // 解析 JSON 格式的响应体
+        })
+        .then((data) => {
+          resolve(data);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
   }
 }
 
-module.exports.RkeyManager=RkeyManager;
+module.exports.RkeyManager = RkeyManager;
