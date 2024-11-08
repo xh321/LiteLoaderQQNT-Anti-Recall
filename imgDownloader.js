@@ -46,7 +46,10 @@ class ImgDownloader {
 
   // 下载被撤回的图片（抄自Lite-Tools）
   async downloadPic(msgItem) {
-    msgItem?.elements?.forEach(async (el) => {
+    if (!Array.isArray(msgItem?.elements)){
+      return;
+    }
+    for (let el of msgItem.elements){
       if (el?.picElement) {
         const pic = el.picElement;
         const thumbMap = new Map([
@@ -72,11 +75,22 @@ class ImgDownloader {
           "to=",
           pic.sourcePath
         );
-        if (!fs.existsSync(pic.sourcePath)) {
+        let pictureRequireDownload = false;
+        try{
+          pictureRequireDownload = statSync(pic.sourcePath).size <= 100;//错误的图片
+        }catch (e) {
+
+        }
+        if (!fs.existsSync(pic.sourcePath) || pictureRequireDownload) {
           this.output("Download pic:", `${picUrl}`, " to ", pic.sourcePath);
           const body = await this.request(`${picUrl}`);
-          fs.mkdirSync(path.dirname(pic.sourcePath), { recursive: true });
-          fs.writeFileSync(pic.sourcePath, body);
+          try {
+            JSON.parse(body);
+            this.output('Picture already expired.', picUrl, pic.sourcePath);//过期
+          } catch (e) {
+            fs.mkdirSync(path.dirname(pic.sourcePath), { recursive: true });
+            fs.writeFileSync(pic.sourcePath, body);
+          }
         } else {
           this.output("Pic already existed, skip.", pic.sourcePath);
         }
@@ -96,7 +110,7 @@ class ImgDownloader {
           pic.thumbPath = thumbMap;
         }
       }
-    });
+    }
   }
 
   async request(url) {
