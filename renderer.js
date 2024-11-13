@@ -6,84 +6,72 @@ export async function onSettingWindowCreated(view) {
   nowConfig = await window.anti_recall.getNowConfig();
 
   const new_navbar_item = `
-    <body>
-      <div class="config_view">
-        <section class="path">
-          <h1>主配置</h1>
-          <div class="wrap">
-
-            <div class="list">      
-            <div class="vertical-list-item top-box">
-              <h2>操作</h2>
-              <div>
-                <button id="clearDb" class="q-button q-button--small q-button--secondary">清空已储存的撤回消息</button>
-              </div>
-            </div>
-            <hr class="horizontal-dividing-line" />
-              <div class="vertical-list-item">
-                <div style="width:90%;" >
-                  <h2>是否将撤回消息存入数据库</h2>
-                  <span class="secondary-text">数据库不加密，若开启风险自负；若不开启，重启QQ后撤回消息会丢失；开启选项后，反撤回消息才会开始保存；若之前开过，现在关闭，储存的消息不会被删除，需要你手动清理。</span>
+    <plugin-menu>
+      <setting-item class="config_view">
+        <setting-section data-title="主配置">
+          <setting-panel>
+            <setting-list data-direction="column">     
+                <setting-item data-direction="row">
+                  <setting-text>操作</setting-text>
+                    <button id="clearDb" class="q-button q-button--small q-button--secondary">清空已储存的撤回消息</button>
+                </setting-item>
+                <setting-item data-direction="row">
+                    <div style="width:90%;" >
+                      <setting-text>是否将撤回消息存入数据库</setting-text>
+                      <span class="secondary-text">数据库不加密，若开启风险自负；若不开启，重启QQ后撤回消息会丢失；开启选项后，反撤回消息才会开始保存；若之前开过，现在关闭，储存的消息不会被删除，需要你手动清理。</span>
+                    </div>
+                    <div id="switchSaveDb" class="q-switch">
+                      <span class="q-switch__handle"></span>
+                    </div>
+                </setting-item>
+                <div class="vertical-list-item">
+                    <div style="width:90%;" >
+                      <h2>是否反撤回自己的消息</h2>
+                      <span class="secondary-text">如果开启，则自己发送的消息也会被反撤回。开启后，从下一条消息开始起生效。</span>
+                    </div>
+                    <div id="switchAntiRecallSelf" class="q-switch">
+                      <span class="q-switch__handle"></span>
+                    </div>
                 </div>
-                <div id="switchSaveDb" class="q-switch">
-                  <span class="q-switch__handle"></span>
-                </div>
-              </div>
-
-            <hr class="horizontal-dividing-line" />
-              <div class="vertical-list-item">
-                <div style="width:90%;" >
-                  <h2>是否反撤回自己的消息</h2>
-                  <span class="secondary-text">如果开启，则自己发送的消息也会被反撤回。开启后，从下一条消息开始起生效。</span>
-                </div>
-                <div id="switchAntiRecallSelf" class="q-switch">
-                  <span class="q-switch__handle"></span>
-                </div>
-              </div>
-
-              <hr class="horizontal-dividing-line" />
-
-              <div class="vertical-list-item">
-              <div>
-                <h2>内存中消息最多缓存条数</h2>
-                <span class="secondary-text">修改将自动保存并立即生效；如果过少可能导致消息接受太快时来不及反撤回，如果过多可能导致内存占用过高。</span>
-              </div>
-              <div style="width:30%;pointer-events: auto;margin-left:10px;">
-                <input id="maxMsgLimit" min="1" max="99999999" maxlength="8" class="text_color path-input" style="width:65%;" type="number" value="${
+                <setting-item data-direction="row">
+                  <div>
+                    <h2>内存中消息最多缓存条数</h2>
+                    <span class="secondary-text">修改将自动保存并立即生效；如果过少可能导致消息接受太快时来不及反撤回，如果过多可能导致内存占用过高。</span>
+                  </div>
+                  <div style="width:30%;pointer-events: auto;margin-left:10px;">
+                    <input id="maxMsgLimit" min="1" max="99999999" maxlength="8" class="text_color path-input" style="width:65%;" type="number" value="     ${
                   nowConfig.maxMsgSaveLimit == null
                     ? 10000
                     : nowConfig.maxMsgSaveLimit
-                }"/>条
-              </div>
-            </div>
-
-              <div class="vertical-list-item">
-              <div>
-                <h2>清理内存缓存消息时一次性清理多少</h2>
-                <span class="secondary-text">修改将自动保存并立即生效；一次性清理过多可能导致某些消息反撤回失败，过少则可能导致内存增长过快。</span>
-              </div>
-              <div style="width:30%;pointer-events: auto;margin-left:10px;">
-                <input id="deletePerTime" min="1" max="99999" maxlength="5" class="text_color path-input" style="width:65%;" type="number" value="${
+                        }"/>条
+                  </div>
+                </setting-item>
+    
+                <setting-item data-direction="row">
+                  <div>
+                    <h2>清理内存缓存消息时一次性清理多少</h2>
+                    <span class="secondary-text">修改将自动保存并立即生效；一次性清理过多可能导致某些消息反撤回失败，过少则可能导致内存增长过快。</span>
+                  </div>
+                  <div style="width:30%;pointer-events: auto;margin-left:10px;">
+                    <input id="deletePerTime" min="1" max="99999" maxlength="5" class="text_color path-input" style="width:65%; margin-left: 3px" type="number" value="      ${
                   nowConfig.deleteMsgCountPerTime == null
                     ? 500
                     : nowConfig.deleteMsgCountPerTime
-                }"/>条
-              </div>
-            </div>
+                        }"/>条
+                  </div>
+                </setting-item>
+            </setting-list>
 
+          </setting-panel>
+        </setting-section>
 
-            </div>
+        
+        <setting-section data-title="样式配置">
+          <setting-panel>
 
-          </div>
-        </section>
+            <setting-list data-direction="column">
 
-        <section class="path">
-          <h1>样式配置</h1>
-          <div class="wrap">
-
-            <div class="list">
-
-              <div class="vertical-list-item">
+              <setting-item data-direction="row">
                 <div>
                   <h2>撤回主题色</h2></h2>
                   <span class="secondary-text">将会同时影响阴影和“已撤回”提示的颜色</span>
@@ -91,7 +79,7 @@ export async function onSettingWindowCreated(view) {
                 <div>
                   <input type="color" value="#ff0000" class="q-button q-button--small q-button--secondary pick-color" />
                 </div>
-              </div>
+              </setting-item>
 
               <hr class="horizontal-dividing-line" />          
 
@@ -116,11 +104,11 @@ export async function onSettingWindowCreated(view) {
                   <span class="q-switch__handle"></span>
                 </div>
               </div>
+              
+            </setting-list>
+          </setting-panel>
+        </setting-section>
 
-            </div>
-
-          </div>
-        </section>
 
         <style>
           .img-hidden {
@@ -133,6 +121,7 @@ export async function onSettingWindowCreated(view) {
             border-radius: 4px;
             margin-right: 16px;
             transition: all 100ms ease-out;
+            border: 1px solid #464646;
           }
         
           .path-input:focus {
@@ -331,13 +320,13 @@ export async function onSettingWindowCreated(view) {
 
         </style>
       </div>
-    </body>
+    </plugin-menu>
   `;
 
   const parser = new DOMParser();
 
   const doc2 = parser.parseFromString(new_navbar_item, "text/html");
-  const node2 = doc2.querySelector("body > div");
+  const node2 = doc2.querySelector("plugin-menu");//这里寻找插入的对象
 
   //清空消息
   node2.querySelector("#clearDb").onclick = async () => {
@@ -484,7 +473,7 @@ async function patchCss() {
                     margin-left:3px;
                     margin-right:3px;
                     margin-bottom: 25px;
-                    box-shadow: 0px 0px 8px 5px ${nowConfig.mainColor};`;
+                    box-shadow: 0px 0px 8px 5px ${nowConfig.mainColor} !important;`;
   } else {
     sHtml += `margin-bottom: 15px;`;
   }
