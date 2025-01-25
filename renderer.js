@@ -39,7 +39,7 @@ export async function onSettingWindowCreated(view) {
                     <span class="secondary-text">修改将自动保存并立即生效；如果过少可能导致消息接受太快时来不及反撤回，如果过多可能导致内存占用过高。</span>
                   </div>
                   <div style="width:30%;pointer-events: auto;margin-left:10px;">
-                    <input id="maxMsgLimit" min="1" max="99999999" maxlength="8" class="text_color path-input" style="width:65%;" type="number" value="     ${
+                    <input id="maxMsgLimit" min="1" max="99999999" maxlength="8" class="text_color path-input" style="width:65%;" type="number" value="${
                   nowConfig.maxMsgSaveLimit == null
                     ? 10000
                     : nowConfig.maxMsgSaveLimit
@@ -53,7 +53,7 @@ export async function onSettingWindowCreated(view) {
                     <span class="secondary-text">修改将自动保存并立即生效；一次性清理过多可能导致某些消息反撤回失败，过少则可能导致内存增长过快。</span>
                   </div>
                   <div style="width:30%;pointer-events: auto;margin-left:10px;">
-                    <input id="deletePerTime" min="1" max="99999" maxlength="5" class="text_color path-input" style="width:65%; margin-left: 3px" type="number" value="      ${
+                    <input id="deletePerTime" min="1" max="99999" maxlength="5" class="text_color path-input" style="width:65%; margin-left: 3px" type="number" value="${
                   nowConfig.deleteMsgCountPerTime == null
                     ? 500
                     : nowConfig.deleteMsgCountPerTime
