@@ -381,13 +381,12 @@ function onBrowserWindowCreated(window) {
             if (
               args.some(
                 (item) =>
-                  item instanceof Array &&
-                  item.length > 0 &&
-                  item[0] &&
-                  item[0].cmdName != null
+                  item &&
+                  item.hasOwnProperty("cmdName") &&
+                  item.cmdName != null
               )
             ) {
-              var args1 = args[1][0];
+              var args1 = args[1];
               if (args1 == null) return;
 
               if (args1.cmdName.indexOf("onProfileDetailInfoChanged") != -1) {
@@ -441,8 +440,8 @@ function onBrowserWindowCreated(window) {
                   await imgDownloader.downloadPic(olderMsg?.msg);
                   await imgDownloader.downloadPic(olderMsgFromRecalledMsg?.msg);
 
-                  args[1][0].cmdName = "none";
-                  args[1][0].payload.msgList.pop();
+                  args[1].cmdName = "none";
+                  args[1].payload.msgList.pop();
 
                   // console.log(args1.payload);
                   output("Detected recall, intercepted");
