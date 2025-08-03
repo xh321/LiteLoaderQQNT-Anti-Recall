@@ -5,14 +5,13 @@ LiteLoaderQQNT 插件，用于比较完善的防撤回。
 
 建议加入更新日志频道，接收最新更新和使用提示 [https://t.me/llqqnt_xh](https://t.me/llqqnt_xh) 。
 
-因工作原因暂无时间更新，如有能帮忙更新的欢迎提交PR。
-目前可以用9.9.20-37625进行测试（感谢@FrexCheat的PR），可能可以用
+目前可以用9.9.20-37625进行测试（感谢@FrexCheat的PR），撤回后重启反撤回也能正常生效
 
 ## 使用方法
 
-*建议从 `LiteLoaderQQNT` 应用商店中直接下载安装，方便快捷。*（新版本 1.0 `LiteLoaderQQNT` 没有插件商店了，请遵循下面的手动安装方法）
+直接在本仓库Release中下载zip，然后在LiteLoaderQQNT配置界面中选择插件压缩包导入即可
 
-**手动安装**：请前往[版本发布页面](https://github.com/xh321/LiteLoaderQQNT-Anti-Recall/releases)下载最新版压缩包（`qq-anti-recall.zip`），在`LiteLoaderQQNT数据目录/plugins/`下面新建文件夹（名称任意，建议为插件名称），将插件压缩包里的内容解压进去，重启QQNT即可。
+也可以使用插件商店类应用安装，如 https://github.com/ltxhhz/LL-plugin-list-viewer
 
 直接克隆源码的话，记得需要手动进行 `npm install`。
 
@@ -32,7 +31,7 @@ LiteLoaderQQNT 插件，用于比较完善的防撤回。
 
 ## 重启 QQ 反撤回失效？
 
-请使用命令行运行 QQ，并观察日志输出。
+请使用命令行运行 QQ，并观察日志输出。（若你使用hook方案启动QQ则无法看到命令行输出日志，所谓hook方案就是你的启动程序不是QQ.exe而是其他代理程序，这种情况下要使用例如LordPE等软件修改QQ.exe的PE头中的子系统，修改为命令行程序再试）
 
 如果出现：数据库打开失败的提示，并且下面的 cause 类似于
 
