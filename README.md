@@ -3,7 +3,7 @@
 LiteLoaderQQNT 插件，用于比较完善的防撤回。
 使用前需要安装 [LiteLoaderQQNT](https://github.com/mo-jinran/LiteLoaderQQNT) ，并在 QQNT 新版上使用。
 
-建议加入更新日志频道，接收最新更新和使用提示 [https://t.me/llqqnt_xh](https://t.me/llqqnt_xh) 。
+强烈建议加TG频道 https://t.me/+UwFw2Ff-8scyOWY1 来蹲更新/公告（老频道被爆破了，请加新频道）
 
 目前可以用9.9.20-37625进行测试（感谢@FrexCheat的PR），撤回后重启反撤回也能正常生效
 
